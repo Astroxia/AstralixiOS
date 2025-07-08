@@ -1,0 +1,164 @@
+PS C:\Users\.\.\.\temp\AstralixiOS\build> cmake --build .
+[  1%] Building ASM object pico-sdk/src/rp2040/boot_stage2/CMakeFiles/bs2_default.dir/compile_time_choice.S.obj
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S: Assembler messages:
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:13: Error: unknown pseudo-op: `.syntax'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:89:  Info: macro invoked from here
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:14: Error: unknown pseudo-op: `.cpu'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:89:  Info: macro invoked from here
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:15: Error: unknown pseudo-op: `.thumb'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:89:  Info: macro invoked from here
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:21: Warning: .type pseudo-op used outside of .def/.endef: ignored.
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:100:  Info: macro invoked from here
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:21: Error: junk at end of line, first unrecognized character is `_'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:100:  Info: macro invoked from here
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:22: Error: unknown pseudo-op: `.thumb_func'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:100:  Info: macro invoked from here
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:101: Error: invalid char '{' beginning operand 1 `{lr}'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:107: Error: no such instruction: `ldr r3,=0x40020000'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:108: Warning: `r0' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:108: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:109: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:109: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:110: Error: no such instruction: `ldr r0,[r3,'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:111: Warning: `r1' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:111: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:112: Error: no such instruction: `bics r0,r1'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:113: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:113: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:114: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:114: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:115: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:115: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:116: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:116: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:118: Error: no such instruction: `ldr r3,=0x18000000'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:121: Warning: `r1' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:121: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:122: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:122: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:125: Warning: `r1' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:125: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:126: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:126: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:134: Warning: `r1' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:134: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:135: Warning: `r2' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:135: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:136: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:136: Error: too many memory references for `str'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:147: Error: no such instruction: `ldr r1,=((7<<16)|(0x0<<8))'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:148: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:148: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:151: Warning: `r1' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:151: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:152: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:152: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:155: Warning: `r0' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:155: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:156: Error: no such instruction: `bl read_flash_sreg'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:157: Warning: `r2' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:157: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:158: Error: operand size mismatch for `cmp'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:159: Error: no such instruction: `beq skip_sreg_programming'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:162: Warning: `r1' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:162: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:163: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:163: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:166: Error: no such instruction: `bl wait_ssi_ready'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:167: Error: no such instruction: `ldr r1,[r3,'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:170: Warning: `r1' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:170: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:171: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:171: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:172: Warning: `r0' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:172: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:173: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:173: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:174: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:174: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:176: Error: no such instruction: `bl wait_ssi_ready'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:177: Error: no such instruction: `ldr r1,[r3,'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:178: Error: no such instruction: `ldr r1,[r3,'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:179: Error: no such instruction: `ldr r1,[r3,'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:183: Warning: `r0' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:183: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:184: Error: no such instruction: `bl read_flash_sreg'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:185: Warning: `r1' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:185: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:186: Error: no such instruction: `tst r0,r1'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:187: Error: no such instruction: `bne 1b'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:192: Warning: `r1' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:192: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:193: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:193: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:210: Error: no such instruction: `ldr r1,=((0x2<<21)|(31<<16)|(0x3<<8))'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:211: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:211: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:213: Warning: `r1' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:213: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:214: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:214: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:224: Error: no such instruction: `ldr r1,=((8<<2)|(4<<11)|(0x2<<8)|(0x1<<0))'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:225: Error: no such instruction: `ldr r0,=(0x18000000+0x000000f4)'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:226: Error: number of operands mismatch for `str'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:228: Warning: `r1' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:228: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:229: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:229: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:231: Warning: `r1' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:231: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:232: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:232: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:233: Warning: `r1' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:233: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:234: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:234: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:237: Error: no such instruction: `bl wait_ssi_ready'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:243: Warning: `r1' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:243: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:244: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:244: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:261: Error: no such instruction: `ldr r1,=((0xa0<<24)|(8<<2)|(4<<11)|(0x0<<8)|(0x2<<0))'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:262: Error: no such instruction: `ldr r0,=(0x18000000+0x000000f4)'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:263: Error: number of operands mismatch for `str'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:265: Warning: `r1' is not valid here (expected `(%rsi)')
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:265: Error: expecting operand after ','; got nothing
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:266: Error: missing ']'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:266: Error: expecting operand after ','; got nothing
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/exit_from_boot2.S:16: Error: invalid char '{' beginning operand 1 `{r0}'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/exit_from_boot2.S:17: Error: expecting operand after ','; got nothing
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/exit_from_boot2.S:18: Error: no such instruction: `beq vector_into_flash'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/exit_from_boot2.S:19: Error: no such instruction: `bx r0'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/exit_from_boot2.S:21: Error: no such instruction: `ldr r0,=(0x10000000+0x100)'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/exit_from_boot2.S:22: Error: no such instruction: `ldr r1,=(0xe0000000+0x0000ed08)'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/exit_from_boot2.S:23: Error: number of operands mismatch for `str'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/exit_from_boot2.S:24: Error: no such instruction: `ldmia r0,{r0,r1}'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/exit_from_boot2.S:25: Error: no such instruction: `msr msp,r0'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/exit_from_boot2.S:26: Error: no such instruction: `bx r1'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/wait_ssi_ready.S:11: Error: invalid char '{' beginning operand 1 `{r0'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/wait_ssi_ready.S:16: Error: no such instruction: `ldr r1,[r3,'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/wait_ssi_ready.S:17: Warning: `r0' is not valid here (expected `(%rsi)')
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/wait_ssi_ready.S:17: Error: expecting operand after ','; got nothing
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/wait_ssi_ready.S:18: Error: no such instruction: `tst r1,r0'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/wait_ssi_ready.S:19: Error: no such instruction: `beq 1b'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/wait_ssi_ready.S:20: Warning: `r0' is not valid here (expected `(%rsi)')
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/wait_ssi_ready.S:20: Error: expecting operand after ','; got nothing
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/wait_ssi_ready.S:21: Error: no such instruction: `tst r1,r0'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/wait_ssi_ready.S:22: Error: no such instruction: `bne 1b'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/wait_ssi_ready.S:24: Error: invalid char '{' beginning operand 1 `{r0'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/read_flash_sreg.S:15: Warning: .type pseudo-op used outside of .def/.endef: ignored.
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/read_flash_sreg.S:15: Error: junk at end of line, first unrecognized character is `r'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/read_flash_sreg.S:16: Error: unknown pseudo-op: `.thumb_func'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/read_flash_sreg.S:18: Error: invalid char '{' beginning operand 1 `{r1'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/read_flash_sreg.S:19: Error: missing ']'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/read_flash_sreg.S:19: Error: expecting operand after ','; got nothing
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/read_flash_sreg.S:21: Error: missing ']'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/read_flash_sreg.S:21: Error: expecting operand after ','; got nothing
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/read_flash_sreg.S:23: Error: no such instruction: `bl wait_ssi_ready'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/read_flash_sreg.S:25: Error: no such instruction: `ldr r0,[r3,'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/read_flash_sreg.S:26: Error: no such instruction: `ldr r0,[r3,'
+C:/Users/./././temp/AstralixiOS/pico-sdk/pico-sdk/src/rp2040/boot_stage2/asminclude/boot2_helpers/read_flash_sreg.S:28: Error: invalid char '{' beginning operand 1 `{r1'
+C:\Users\.\.\.\temp\AstralixiOS\pico-sdk\pico-sdk\src\rp2040\boot_stage2\boot2_w25q080.S:282: Error: unknown pseudo-op: `.ltorg'
+mingw32-make[2]: *** [pico-sdk\src\rp2040\boot_stage2\CMakeFiles\bs2_default.dir\build.make:78: pico-sdk/src/rp2040/boot_stage2/CMakeFiles/bs2_default.dir/compile_time_choice.S.obj] Error 1
+mingw32-make[1]: *** [CMakeFiles\Makefile2:2288: pico-sdk/src/rp2040/boot_stage2/CMakeFiles/bs2_default.dir/all] Error 2
+mingw32-make: *** [Makefile:90: all] Error 2
