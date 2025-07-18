@@ -1,4 +1,2 @@
 # AstralixiOS
-Astralixi's Kernel will be a modified Minix kernel, but more ram efficient.
-Astralixi's File System will be based off: https://github.com/strawberryhacker/fat32
-Astralixi's CLI, Memory Management, etc, will be done fully original.
+Astralixi OS API is a Work In Progress, if your keen on making apps for Astralixi, make sure to start learning how to code with PikaPython!
