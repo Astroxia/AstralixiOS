@@ -1,149 +1,250 @@
-# Constants
+# ===============================
+# Astralixi OS - PikaPython API
+# ===============================
+
+# --- Constants ---
 MAX_COMMAND_LENGTH = 100
 MAX_USERNAME_LENGTH = 15
 MAX_PASSWORD_LENGTH = 15
-# Global Variables
+
+# --- Global State ---
 current_username = "admin"
-current_password = "admin"
 current_working_directory = "B:/"
-failed_login_attempts = 0
 current_time = "00:00"
-# Initialize the system and hardware
+
+# --- System Initialization ---
+
 def initialize_system():
-    """Initialize hardware and services for the OS.
-    
-    Call this function at the start of your application to set up the environment.
     """
-    pass  # Implementation is handled by the OS
-def connect_to_wifi(ssid, password):
-    """Connect to the specified Wi-Fi network.
-    
-    Usage: connect_to_wifi("Your_SSID", "Your_Password")
+    Initialize system hardware, display, SD card, keyboard, audio, and Wi-Fi.
+
+    This should be the first function called before interacting with the OS.
     """
-    pass  # Implementation is handled by the OS
-def login():
-    """Handle user login process.
-    
-    Call this function to prompt the user for their username and password.
-    Returns True if login is successful, False otherwise.
+    pass
+
+def connect_to_wifi(ssid: str, password: str):
     """
-    pass  # Implementation is handled by the OS
-# Command Functions
-def command_hello():
-    """Print a greeting message.
-    
-    Call this function to greet the current user.
+    Connect to a Wi-Fi network using SSID and password.
+
+    Args:
+        ssid (str): The Wi-Fi network name.
+        password (str): The Wi-Fi password.
     """
-    pass  # Implementation is handled by the OS
-def command_exit():
-    """Exit the application.
-    
-    Call this function to terminate the application gracefully.
+    pass
+
+def login() -> bool:
     """
-    pass  # Implementation is handled by the OS
-def command_help():
-    """List available commands.
-    
-    Call this function to display a list of commands that the user can execute.
+    Prompt the user for credentials and attempt login.
+
+    Returns:
+        bool: True if login is successful, False otherwise.
     """
-    pass  # Implementation is handled by the OS
-def command_whoami():
-    """Display the current username.
-    
-    Call this function to show the username of the currently logged-in user.
+    pass
+
+# --- User & Identity Management ---
+
+def get_current_user() -> str:
     """
-    pass  # Implementation is handled by the OS
-def command_passwd():
-    """Change the user's password.
-    
-    Call this function to allow the user to change their password.
+    Get the currently logged-in username.
+
+    Returns:
+        str: Current user's username.
     """
-    pass  # Implementation is handled by the OS
-def command_time():
-    """Display the current system time.
-    
-    Call this function to show the current time in HH:MM format.
+    return current_username
+
+def change_username(new_username: str):
     """
-    pass  # Implementation is handled by the OS
-def command_settime():
-    """Set a new system time.
-    
-    Call this function to update the system time.
+    Change the current user's username.
+
+    Args:
+        new_username (str): The new username to set.
     """
-    pass  # Implementation is handled by the OS
-def command_uname():
-    """Display the system name.
-    
-    Call this function to show the name of the operating system.
+    pass
+
+def change_password():
     """
-    pass  # Implementation is handled by the OS
-def command_cls():
-    """Clear the screen.
-    
-    Call this function to clear the display screen.
+    Prompt the user to change their password securely.
     """
-    pass  # Implementation is handled by the OS
-def command_print_directory():
-    """Print the current working directory.
-    
-    Call this function to display the path of the current working directory.
+    pass
+
+# --- Time & System Info ---
+
+def get_system_time() -> str:
     """
-    pass  # Implementation is handled by the OS
-def command_change_directory(new_directory):
-    """Change the current working directory.
-    
-    Usage: command_change_directory("new_directory_path")
-    Call this function to change the working directory to the specified path.
+    Get the current system time.
+
+    Returns:
+        str: Time in HH:MM format.
     """
-    pass  # Implementation is handled by the OS
-def command_list_files():
-    """List files in the current directory.
-    
-    Call this function to display all files in the current working directory.
+    return current_time
+
+def set_system_time(new_time: str):
     """
-    pass  # Implementation is handled by the OS
-def command_create_file(filename):
-    """Create a new file.
-    
-    Usage: command_create_file("filename.txt")
-    Call this function to create a new file with the specified name.
+    Set the system time.
+
+    Args:
+        new_time (str): Time in HH:MM format.
     """
-    pass  # Implementation is handled by the OS
-def command_delete_file(filename):
-    """Delete a file.
-    
-    Usage: command_delete_file("filename.txt")
-    Call this function to delete the specified file.
+    pass
+
+def get_system_name() -> str:
     """
-    pass  # Implementation is handled by the OS
-def command_create_directory(dirname):
-    """Create a new directory.
-    
-    Usage: command_create_directory("new_directory_name")
-    Call this function to create a new directory with the specified name.
+    Get the OS name/version.
+
+    Returns:
+        str: Name of the operating system.
     """
-    pass  # Implementation is handled by the OS
-def command_delete_directory(dirname):
-    """Delete a directory.
-    
-    Usage: command_delete_directory("directory_name")
-    Call this function to delete the specified directory.
+    return "Astralixi Kernel"
+
+def get_device_info() -> dict:
     """
-    pass  # Implementation is handled by the OS
-def execute_command(command):
-    """Route a command string to its corresponding function.
-    
-    Call this function with the command string to execute the desired command.
-    Example: execute_command("hello")
+    Get hardware specifications.
+
+    Returns:
+        dict: Device info like CPU, RAM, flash, etc.
     """
-    pass  # Implementation is handled by the OS
-# Main loop
+    return {
+        "CPU": "Dual-core Arm Cortex-M33 / RISC-V Hazard3 @ 150 MHz",
+        "RAM": "520 KB SRAM",
+        "Flash": "4 MB QSPI",
+        "Wi-Fi": "802.11n",
+        "Bluetooth": "5.2",
+        "GPIO": 26,
+        "Form Factor": "51x21mm"
+    }
+
+# --- Filesystem Operations ---
+
+def get_current_directory() -> str:
+    """
+    Get the current working directory path.
+
+    Returns:
+        str: Current directory path.
+    """
+    return current_working_directory
+
+def change_directory(path: str):
+    """
+    Change the working directory.
+
+    Args:
+        path (str): Target directory path.
+    """
+    pass
+
+def list_files() -> list:
+    """
+    List files and directories in the current directory.
+
+    Returns:
+        list: List of filenames and directories.
+    """
+    pass
+
+def create_file(filename: str):
+    """
+    Create a new file.
+
+    Args:
+        filename (str): Name of the file to create.
+    """
+    pass
+
+def delete_file(filename: str):
+    """
+    Delete an existing file.
+
+    Args:
+        filename (str): Name of the file to delete.
+    """
+    pass
+
+def create_directory(name: str):
+    """
+    Create a new directory.
+
+    Args:
+        name (str): Directory name.
+    """
+    pass
+
+def delete_directory(name: str):
+    """
+    Delete an existing directory.
+
+    Args:
+        name (str): Directory name.
+    """
+    pass
+
+def read_file(filename: str) -> str:
+    """
+    Read and return the contents of a file.
+
+    Args:
+        filename (str): Name of the file.
+
+    Returns:
+        str: File contents.
+    """
+    pass
+
+# --- Command Interface ---
+
+def clear_screen():
+    """
+    Clear the display screen.
+    """
+    pass
+
+def print_hello():
+    """
+    Display a greeting to the current user.
+    """
+    pass
+
+def show_help():
+    """
+    Display a list of supported commands.
+    """
+    pass
+
+def echo(message: str):
+    """
+    Echo a message back to the user.
+
+    Args:
+        message (str): Message to display.
+    """
+    pass
+
+def exit_os():
+    """
+    Exit the command loop and shut down the OS.
+    """
+    pass
+
+def execute_command(command: str):
+    """
+    Parse and execute a user-entered command string.
+
+    Args:
+        command (str): The command to run.
+    """
+    pass
+
+# --- Runtime ---
+
 def main():
-    """Main function to run the OS.
-    
-    Call this function to start the operating system and enter the command loop.
     """
-    pass  # Implementation is handled by the OS
-# Run the main function
+    Run the Astralixi OS main command loop.
+
+    Handles login, command input, and system control.
+    """
+    pass
+
+# --- Entry Point ---
+
 if __name__ == "__main__":
     main()
