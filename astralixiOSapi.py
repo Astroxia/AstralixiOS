@@ -1,5 +1,7 @@
 # ===============================
 # Astralixi OS - PikaPython API
+# Made By Astrox
+# API Version 25-08-25
 # ===============================
 
 # --- Constants ---
@@ -133,19 +135,18 @@ def change_directory(path: str):
     """
     pass
 
-def list_files() -> list:
+def list_files():
     """
-    List files and directories in the current directory.
-
+    List files and directories in the current directory (equivalent to 'ls' or 'list files').
     Returns:
         list: List of filenames and directories.
     """
-    pass
+    # Placeholder: should interact with OS filesystem
+    return []
 
 def create_file(filename: str):
     """
-    Create a new file.
-
+    Create a new file (equivalent to 'create file <filename>').
     Args:
         filename (str): Name of the file to create.
     """
@@ -153,8 +154,7 @@ def create_file(filename: str):
 
 def delete_file(filename: str):
     """
-    Delete an existing file.
-
+    Delete an existing file (equivalent to 'delete file <filename>').
     Args:
         filename (str): Name of the file to delete.
     """
@@ -162,8 +162,7 @@ def delete_file(filename: str):
 
 def create_directory(name: str):
     """
-    Create a new directory.
-
+    Create a new directory (equivalent to 'create dir <name>' or 'create directory <name>').
     Args:
         name (str): Directory name.
     """
@@ -171,8 +170,7 @@ def create_directory(name: str):
 
 def delete_directory(name: str):
     """
-    Delete an existing directory.
-
+    Delete an existing directory (equivalent to 'delete dir <name>' or 'delete directory <name>').
     Args:
         name (str): Directory name.
     """
@@ -189,6 +187,29 @@ def read_file(filename: str) -> str:
         str: File contents.
     """
     pass
+
+def open_file(filename: str) -> str:
+    """
+    Open and read the contents of a file (equivalent to 'open file <filename>').
+    Args:
+        filename (str): Name of the file.
+    Returns:
+        str: File contents.
+    """
+    return read_file(filename)
+
+def get_memory_info() -> dict:
+    """
+    Get memory usage information.
+    Returns:
+        dict: Available, used, and total memory in bytes.
+    """
+    # Placeholder values
+    return {
+        "available": 0,
+        "used": 0,
+        "total": 512000
+    }
 
 # --- Command Interface ---
 
@@ -207,6 +228,7 @@ def print_hello():
 def show_help():
     """
     Display a list of supported commands.
+    Supported: hello, help, list files, create file, delete file, create dir, delete dir, print directory, change directory, whoami, pico, cls, passwd, usernm, time, settime, uname, memory, echo, open file, exit
     """
     pass
 
@@ -225,10 +247,16 @@ def exit_os():
     """
     pass
 
+def print_working_directory():
+    """
+    Print the current working directory (equivalent to 'pwd' command).
+    """
+    print(get_current_directory())
+
 def execute_command(command: str):
     """
     Parse and execute a user-entered command string.
-
+    Supported commands: hello, help, whoami, passwd, time, settime, uname, usernm, clear/cls, echo, pico, pwd, ls/list files, open file, cd, create file, delete file, create directory, delete directory, memory, exit.
     Args:
         command (str): The command to run.
     """
