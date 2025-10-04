@@ -1,0 +1,125 @@
+                      GNU GENERAL PUBLIC LICENSE
+                         Version 3, 29 June 2007
+
+Copyright (C) 2025 Astroxia
+Everyone is permitted to copy and distribute verbatim copies
+of this license document, but changing it is not allowed.
+
+                            Preamble
+
+The GNU General Public License is a free, copyleft license for software
+and other kinds of works.  The licenses for most software and other
+practical works are designed to take away your freedom to share and change
+the works.  By contrast, the GNU General Public License is intended to
+guarantee your freedom to share and change all versions of a program--to
+make sure it remains free software for all its users.  We, the Free Software
+Foundation, use the GNU General Public License for most of our software; it
+applies also to any other work released this way by its authors.  You can
+apply it to your programs, too.
+
+When we speak of free software, we are referring to freedom, not price.
+To understand the concept, you should think of "free" as in "free speech,"
+not as in "free beer."  Freedom means the absence of barriers to sharing
+and changing the software.  To protect your rights, we need to prevent
+others from denying you these rights or asking you to surrender the rights.
+
+Therefore, you have the freedom to:
+  * Share your software with others
+  * Modify your software so that it can be adapted to your needs
+  * Share your modifications with others
+  * Use your software in private, as long as you don’t distribute it
+    (Note that this has implications for use and redistribution in
+    case of software used in hardware, as well as distributing the source
+    code or modifying it)
+
+Each of these freedoms is important, but to exercise your freedom fully,
+you must follow certain restrictions.  This License explains these freedoms
+in detail and provides important protections.
+
+                    Terms and Conditions
+
+  0. Definitions.
+
+  "This License" refers to version 3 of the GNU General Public License.
+
+  "Copyright" also means copyright-like laws that apply to other kinds of
+  works, such as semiconductor mask designs.
+
+  "The Program" refers to any work covered by this License.  Each licensee
+  is addressed as "you."
+
+  "The Source Code" for a work means the preferred form of the work for
+  making modifications to it.  For an executable work, the source code
+  includes all the source code for all modules it contains and any associated
+  interface definition files, plus the scripts used to control compilation
+  and installation of the executable.
+
+  "Object Code" means any non-source form of a work.
+
+  1. You may copy, modify, distribute, and/or sublicense the Program,
+  provided that you meet the following conditions:
+
+    1.1. You must cause any modified files to carry prominent notices
+    stating that you changed the files and the date of any change.
+    
+    1.2. You must keep intact all the copyright notices, terms and
+    conditions from the source code and the license itself.
+
+    1.3. You must provide the source code, either as part of the
+    distribution or via a free and accessible URL.
+
+  2. If you distribute the Program or its modifications, you must:
+    
+    2.1. Include a copy of the GNU General Public License with your
+    distribution.
+
+    2.2. If the Program is modified, you must include prominent notices
+    stating that you have changed the files, along with the date of any
+    change.
+
+  3. You may not impose further restrictions on the exercise of the rights
+  granted by this License.
+
+  4. You may not use the name of the Free Software Foundation or the names
+  of its contributors for promotional purposes without written permission.
+
+  5. If you distribute or publish the Program, or any modified version of
+  it, you must do so under this License.
+
+  6. If you modify the Program and distribute your modifications, you may
+  license your modifications under terms that are compatible with this
+  License, but you may not impose any additional restrictions that prevent
+  others from using or distributing the Program under the same terms.
+
+  7. If you distribute the Program in object code or executable form, you
+  must accompany it with the corresponding source code or make it available
+  under the same terms.
+
+  8. If you use the Program in a manner that constitutes "tivoization" (i.e.,
+  locking or disabling the use of modified versions), you may not impose
+  such restrictions.
+
+  9. If you redistribute the Program, you may do so under different terms
+  than those outlined in this License, provided you ensure that the
+  rights under this License are preserved.
+
+  10. This License does not grant you any rights to use trademarks
+  associated with the Program.
+
+  11. Warranty Disclaimer: This Program is distributed without any warranty,
+  expressed or implied.  See the GNU General Public License for the full
+  disclaimer.
+
+  12. Liability Disclaimer: No party shall be held liable for any damages
+  or costs arising from the use of this Program.
+
+  13. Termination: If you violate the terms of this License, your rights
+  under it will be terminated.
+
+  14. Interpretation: This License is governed by the law of the United
+  States and any other applicable laws.
+
+  15. **Further Information**: If you have questions or need assistance, you
+  can contact the Free Software Foundation at the following:
+  (address and details can be found on the official FSF website).
+
