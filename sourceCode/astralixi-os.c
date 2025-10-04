@@ -1,5 +1,10 @@
-// cmake lists is at "C:\Program Files\CMake\bin\cmake.exe"
+/* 
+Code originally made by Astrox.
+Youtube: https://youtube.com/@astroxia
+Reddit: https://reddit.com/user/astrox_yt
 
+See LICENSE file for distribution permissions.
+*/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
