@@ -38,3 +38,5 @@ Project Repository: https://github.com/Astroxia/AstralixiOS
 Forums: https://forum.clockworkpi.com/t/astralixi-pico-os-megathread/
 Astrox Youtube: https://youtube.com/@astroxia
 Astrox Reddit: https://reddit.com/user/astrox_yt
+
+**Thanks to Blair Leduc at picocalc-text-starter for all of the drivers!**
