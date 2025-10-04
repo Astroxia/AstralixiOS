@@ -1,0 +1,8 @@
+## Current Goals:
+- add the C compiler from pshell into Astralixi OS 
+- make sure total SRAM usage isn't over 130kb
+- make a thing to access PSRAM
+- start designing GUI 
+- add the GUI to Astralixi OS, and make all the graphics get loaded to PSRAM
+- fix any errors from previous goals
+- release first actual version
