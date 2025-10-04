@@ -1,0 +1,55 @@
+;
+;   Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
+;
+;   SPDX-License-Identifier: BSD-3-Clause
+;
+;   ISR is used to control the frequency of the tone.
+;   OSR sets the volume of the tone. (Potentially use DMA to use a envelope)
+
+
+; Side-set pin 0 is used for PWM output
+
+.program audio_pwm
+.side_set 1 opt
+
+;   pull noblock            ; Manually pio_sm_exec from C
+;   out isr, 32             ; PWM period in ISR
+    pull noblock    side 0  ; Pull from FIFO to OSR if available, else copy X to OSR.
+    mov x, osr              ; Copy most-recently-pulled duty-cycle back to scratch X
+    mov y, isr              ; ISR contains PWM period. Y used as counter.
+countloop:
+    jmp x!=y noset          ; Set pin high if X == Y, keep the two paths length matched
+    jmp skip        side 1
+noset:
+    nop                     ; Single dummy cycle to keep the two paths the same length
+skip:
+    jmp y-- countloop       ; Loop until Y hits 0, then pull a fresh PWM value from FIFO
+
+% c-sdk {
+static inline void audio_pwm_program_init(PIO pio, uint sm, uint offset, uint pin) {
+   pio_gpio_init(pio, pin);
+   pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true);
+   pio_sm_config c = audio_pwm_program_get_default_config(offset);
+   sm_config_set_sideset_pins(&c, pin);
+   pio_sm_init(pio, sm, offset, &c);
+}
+
+static inline bool audio_pwm_is_not_silence(uint16_t frequency) {
+    // Check if the frequency is zero or silence
+    return (frequency >= 100 && frequency <= 2000);
+}
+
+// Write `period` to the input shift register
+static inline void audio_pwm_set_frequency(PIO pio, uint sm, uint32_t frequency) {
+    // This sets the frequence of the tone, we will keep it like this.
+    pio_sm_set_enabled(pio, sm, false);
+    if (audio_pwm_is_not_silence(frequency)) {
+        int period = clock_get_hz(clk_sys) / (frequency * 3);
+        pio_sm_put_blocking(pio, sm, period & ~1);
+        pio_sm_exec(pio, sm, pio_encode_pull(false, false));
+        pio_sm_exec(pio, sm, pio_encode_out(pio_isr, 32));
+        pio_sm_set_enabled(pio, sm, true);
+        pio_sm_put_blocking(pio, sm, period >> 1);
+    }
+}
+%}
