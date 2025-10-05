@@ -2,7 +2,16 @@
 - add the C compiler from pshell into Astralixi OS 
 - make sure total SRAM usage isn't over 130kb
 - make a thing to access PSRAM
-- start designing GUI 
+- start designing GUI
+  - menubar (toolbar) [DONE]
+  - background [DONE]
+  - app menu [DONE]
+  - app in menu template [DONE]
+  - notepad app 
+  - calculator app
+  - file manager app
+  - CommandTerm app
 - add the GUI to Astralixi OS, and make all the graphics get loaded to PSRAM
+  - make sure total PSRAM usage isn't over 500kb
 - fix any errors from previous goals
 - release first actual version
