@@ -13,8 +13,20 @@
   - notepad app 
     - tool bar [DONE]
     - tool bar menus
+      - file [DONE]
+      - edit
+      - settings
   - calculator app
+    - basic calculator buttons
+    - calculations box
+    - calculator type changing
+    - scientific calculator buttons
+    - programming calculator buttons
+  
   - file manager app
+    - save file popup
+    - ...
+   
   - CommandTerm app
 
 - Make a thing to be able to access PSRAM [NEEDS TO BE TESTED]
