@@ -35,7 +35,7 @@ Astralixi OS is released under the GNU General Public License. See the LICENSE f
 
 ## Contact
 Project Repository: https://github.com/Astroxia/AstralixiOS
-Forums: https://forum.clockworkpi.com/t/astralixi-pico-os-megathread/
+Forums: Go to the *discussions* page on the project repository for the "forums"!
 Astrox Youtube: https://youtube.com/@astroxia
 Astrox Reddit: https://reddit.com/user/astrox_yt
 
