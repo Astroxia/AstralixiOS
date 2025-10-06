@@ -8,6 +8,8 @@
   - app menu [DONE]
   - app in menu template [DONE]
   - notepad app 
+    - tool bar [DONE]
+    - tool bar menus
   - calculator app
   - file manager app
   - CommandTerm app
