@@ -1,10 +1,5 @@
-/* 
-Code originally made by Astrox.
-Youtube: https://youtube.com/@astroxia
-Reddit: https://reddit.com/user/astrox_yt
+// cmake lists is at "C:\Program Files\CMake\bin\cmake.exe"
 
-See LICENSE file for distribution permissions.
-*/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -24,10 +19,20 @@ See LICENSE file for distribution permissions.
 #include "drivers/fat32.h"
 #include "drivers/southbridge.h"
 #include "hardware/watchdog.h"
+#include "psram_spi.h"
 
 #define MAX_COMMAND_LENGTH 129 // 128 characters + null terminator
 #define MAX_USERNAME_LENGTH 15 // 14 + null
 #define MAX_PASSWORD_LENGTH 15
+
+// RP2040-PSRAM required defines
+#define PSRAM_PIN_CS   20
+#define PSRAM_PIN_SCK  21
+#define PSRAM_PIN_MOSI 2
+#define PSRAM_PIN_MISO 3
+
+// Declare PSRAM handle globally
+psram_spi_inst_t psram_spi;
 
 void read_line(char *buffer, int maxLength);
 void read_password(char *buffer, int maxLength);
@@ -55,6 +60,58 @@ fat32_entry_t entry;
 char history[MAX_HISTORY][MAX_COMMAND_LENGTH];
 int history_next_idx = 0;
 int history_cycle_idx = -1;
+
+
+/*
+ * Load a file from FAT32 SD card and write its contents into PSRAM
+ *
+ * This function demonstrates how to transfer arbitrary file data from the SD card
+ * (using the FAT32 file system driver) directly into external PSRAM attached to the Pico.
+ * 
+ * The FAT32 driver allows you to open files and read their contents in chunks. 
+ * The PSRAM driver (see psram_spi.h and psram_spi.c) provides a simple API for
+ * writing bytes to PSRAM at any address, so you can treat PSRAM like a large block
+ * of memory for caching, buffering, or temporary data storage.
+ *
+ * Usage:
+ *    load_file_to_psram("myfile.txt", 0x00000);
+ *      - Reads "myfile.txt" from the SD card and writes it to PSRAM starting at address 0x00000.
+ *
+ * Notes and best practices:
+ * - You can choose any starting PSRAM address, but make sure you don’t overwrite important data.
+ * - This function reads the file in 256-byte blocks and writes each block sequentially.
+ * - You can read back data from PSRAM using psram_read() or psram_read8/16/32, for random access.
+ * - The FAT32 driver is robust, supporting long filenames and directories.
+ * - PSRAM is not persistent storage; data will be lost on power-off or reset.
+ * - You can use PSRAM to cache files, implement virtual memory, or buffer media for fast access.
+ *
+ * Example code for reading back:
+ *    uint8_t buffer[256];
+ *    psram_read(&psram_spi, 0x00000, buffer, sizeof(buffer));
+ *
+ * Both the FAT32 and PSRAM drivers are portable and efficient, making this setup suitable for
+ * embedded projects where fast, temporary storage is required.
+ */
+
+void load_file_to_psram(const char *filename, uint32_t psram_addr) {
+    fat32_file_t file;
+    fat32_error_t result = fat32_open(&file, filename);
+    if (result != FAT32_OK) {
+        printf("Error opening file: %s\n", fat32_error_string(result));
+        return;
+    }
+    uint8_t buffer[256];
+    size_t bytes_read;
+    uint32_t addr = psram_addr;
+    while (1) {
+        result = fat32_read(&file, buffer, sizeof(buffer), &bytes_read);
+        if (result != FAT32_OK || bytes_read == 0) break;
+        psram_write(&psram_spi, addr, buffer, bytes_read);
+        addr += bytes_read;
+    }
+    fat32_close(&file);
+    printf("Loaded %s to PSRAM at 0x%08X\n", filename, psram_addr);
+}
 
 void add_to_history(const char *command) {
     if (command[0] == '\0') return;
@@ -1129,6 +1186,9 @@ int main() {
         sleep_ms(1000);
     }
 
+    // Initialize PSRAM (using PIO 0, state machine 0, fudge enabled)
+    psram_spi = psram_spi_init_clkdiv(pio0, 0, 1.0, true);
+
     load_credentials();
 
     if (cyw43_arch_init()) {
@@ -1156,7 +1216,7 @@ Login_Sequence:
         printf("\rLogin Successful!\n");
     } else {
         printf("\rIncorrect Login!\n");
-        sleep_ms(1000);
+	sleep_ms(1000);
         if (failedLoginAttempts < 5) {
             goto Login_Sequence;
         } else {
