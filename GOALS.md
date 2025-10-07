@@ -26,6 +26,7 @@
     - calculator type changing
     - scientific calculator buttons
     - programming calculator buttons
+    - programming the calculator app
   
   - file manager app
     - save file popup
