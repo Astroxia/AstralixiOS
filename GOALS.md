@@ -1,7 +1,9 @@
 ## Current Goals:
+- battery command (percentage)
+  
 - add the C compiler from pshell into Astralixi OS 
 
-- make sure total SRAM usage isn't over 130kb
+- make sure total SRAM usage isn't over 64kb
 
 - make a thing to access PSRAM
 
@@ -14,8 +16,10 @@
     - tool bar [DONE]
     - tool bar menus
       - file [DONE]
-      - edit
-      - settings
+      - edit [DONE]
+      - settings [DONE]
+      - programming notepad app
+        
   - calculator app
     - basic calculator buttons
     - calculations box
@@ -32,7 +36,7 @@
 - Make a thing to be able to access PSRAM [NEEDS TO BE TESTED]
 
 - add the GUI to Astralixi OS, and make all the graphics get loaded to PSRAM
-  - make sure total PSRAM usage isn't over 500kb
+  - make sure total PSRAM usage isn't over 1mb
 
 - fix any errors from previous goals
 
