@@ -31,8 +31,10 @@
   - file manager app
     - save file popup
     - ...
+    - programming file manager app
    
   - CommandTerm app
+    - programming the terminal app
 
 - Make a thing to be able to access PSRAM [NEEDS TO BE TESTED]
 
