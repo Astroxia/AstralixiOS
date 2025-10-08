@@ -12,6 +12,8 @@
   - background [DONE]
   - app menu [DONE]
   - app in menu template [DONE]
+  - desktop/toolbar icons for all apps
+    
   - notepad app 
     - tool bar [DONE]
     - tool bar menus
@@ -21,7 +23,7 @@
       - programming notepad app
         
   - calculator app
-    - basic calculator buttons
+    - basic calculator buttons [DONE]
     - calculations box
     - calculator type changing
     - scientific calculator buttons
@@ -35,6 +37,12 @@
    
   - CommandTerm app
     - programming the terminal app
+   
+  - aCoder app
+ 
+  - artista app
+   
+  - Programming the whole GUI
 
 - Make a thing to be able to access PSRAM [NEEDS TO BE TESTED]
 
