@@ -24,8 +24,8 @@
         
   - calculator app
     - basic calculator buttons [DONE]
-    - calculations box
-    - calculator type changing
+    - calculations box [DONE]
+    - calculator type changing [DONE]
     - scientific calculator buttons
     - programming calculator buttons
     - programming the calculator app
