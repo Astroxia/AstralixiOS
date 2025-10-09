@@ -1,0 +1,24 @@
+diff --git a/Makefile b/Makefile
+index 9d740d8..eeff8cf 100644
+--- a/Makefile
++++ b/Makefile
+@@ -401,11 +401,15 @@ EXTRA_CFLAGS += -DDM_ODM_SUPPORT_TYPE=0x04
+ ifeq ($(CONFIG_PLATFORM_I386_PC), y)
+ EXTRA_CFLAGS += -DCONFIG_LITTLE_ENDIAN
+ EXTRA_CFLAGS += -DCONFIG_IOCTL_CFG80211 -DRTW_USE_CFG80211_STA_EVENT
+-SUBARCH := $(shell uname -m | sed -e "s/i.86/i386/; s/ppc/powerpc/; s/armv.l/arm/; s/aarch64/arm64/;")
++#SUBARCH := $(shell uname -m | sed -e "s/i.86/i386/; s/ppc/powerpc/; s/armv.l/arm/; s/aarch64/arm64/;")
++#ARCH ?= $(SUBARCH)
++SUBARCH := arm
+ ARCH ?= $(SUBARCH)
+-CROSS_COMPILE ?=
+-KVER  := $(shell uname -r)
+-KSRC := /lib/modules/$(KVER)/build
++CROSS_COMPILE ?= /home/luckfox/luckfox-lyra-sdk-250311/prebuilts/gcc/linux-x86/arm/gcc-arm-10.3-2021.07-x86_64-arm-none-linux-gnueabihf/bin/arm-none-linux-gnueabihf-
++#KVER  := $(shell uname -r)
++KVER  := 6.1
++#KSRC := /lib/modules/$(KVER)/build
++KSRC := /home/luckfox/luckfox-lyra-sdk-250311/kernel-6.1
+ MODDESTDIR := /lib/modules/$(KVER)/kernel/drivers/net/wireless/
+ INSTALL_PREFIX :=
+ endif

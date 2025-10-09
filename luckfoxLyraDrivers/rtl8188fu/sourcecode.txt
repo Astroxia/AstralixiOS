@@ -1,0 +1,2 @@
+https://github.com/kelebek333/rtl8188fu.git
+master 7ce43037212aab03a5cfe441992eee04de7f858d
