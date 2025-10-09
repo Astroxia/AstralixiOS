@@ -27,7 +27,6 @@
     - calculations box [DONE]
     - calculator type changing [DONE]
     - scientific calculator buttons
-    - programming calculator buttons
     - programming the calculator app
   
   - file manager app
