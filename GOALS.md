@@ -26,7 +26,7 @@
     - basic calculator buttons [DONE]
     - calculations box [DONE]
     - calculator type changing [DONE]
-    - scientific calculator buttons
+    - scientific calculator buttons [DONE]
     - programming the calculator app
   
   - file manager app
@@ -46,8 +46,3 @@
 - Make a thing to be able to access PSRAM [NEEDS TO BE TESTED]
 
 - add the GUI to Astralixi OS, and make all the graphics get loaded to PSRAM
-  - make sure total PSRAM usage isn't over 1mb
-
-- fix any errors from previous goals
-
-- release first actual version
