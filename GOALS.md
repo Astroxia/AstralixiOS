@@ -7,6 +7,8 @@
 
 - make a thing to access PSRAM
 
+- write driver code for luckfox lyra
+
 - start designing GUI
   - menubar (toolbar) [DONE]
   - background [DONE]
