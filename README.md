@@ -39,4 +39,4 @@ Forums: Go to the *discussions* page on the project repository for the "forums"!
 Astrox Youtube: https://youtube.com/@astroxia
 Astrox Reddit: https://reddit.com/user/astrox_yt
 
-**Thanks to Blair Leduc at picocalc-text-starter for all of the drivers!**
+### ALL DRIVER FILES ARE WORK IN PROGRESS, AND ALL ARE WRITTEN *WITH HELP FROM* CLAUDE, AND PICOCALC-TEXT-STARTER WAS ONLY USED AS A REFERENCE
