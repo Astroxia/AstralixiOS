@@ -69,6 +69,8 @@
     - toolbar (on the left of screen, options for pixel brush size, etc)
     - programming the art editor app.
    
+  - character font sheet (1p = 1p, 2p = 1p and 3p = 1p)
+   
   - Programming the whole GUI into PSRAM
 
 - Make a thing to be able to access PSRAM 
