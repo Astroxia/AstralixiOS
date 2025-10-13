@@ -37,11 +37,11 @@
   
   - file manager app
     - save file popup
-    - File Explorer Panel (Left Sidebar)
+    - File Explorer Panel (Left Sidebar) [DONE]
     - Main Display Area (Right Panel)
-    - Top Toolbar (Navigation & Controls)
-    - Right-Click Context Menu
-    - File Properties/Details Panel (when clicked on a file, with properties, etc)
+    - Top Toolbar (Navigation & Controls) [DONE]
+    - Right-Click Context Menu [DONE]
+    - File Properties/Details Panel [DONE]
     - Status Bar (on bottom of the main display area, showing info for things like file transfers etc)
     - programming file manager app
    
