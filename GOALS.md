@@ -46,7 +46,7 @@
     - programming file manager app
    
   - CommandTerm app
-    - menu bar (and other menus inside of it)
+    - menu bar (and other menus inside of it) [DONE]
     - Input areas
     - Text based Progress Bars
     - programming the terminal app
