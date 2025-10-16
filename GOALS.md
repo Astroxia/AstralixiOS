@@ -76,3 +76,9 @@
 - Make a thing to be able to access PSRAM 
 
 - add the GUI to Astralixi OS, and make all the graphics get loaded to PSRAM
+
+- release the first actual version of Astralixi OS
+
+_______________________________________________________________________________________________________________________________________________________________________________________________________________
+
+- Make PicoCalc ebook reader for Astralixi OS (file support for mobi only)
