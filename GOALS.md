@@ -11,12 +11,7 @@
 
 - start designing GUI
   - menubar (toolbar) [DONE]
-  - background [DONE]
-  - app menu [DONE]
-  - app in menu template [DONE]
-  - desktop/toolbar icons for all apps
-  - right click on desktop app, for options for quit
-  - basic cursor
+  - basic cursor [DONE]
   - text editing cursor
   - loading cursor
     
@@ -45,12 +40,6 @@
     - Status Bar (on bottom of the main display area, showing info for things like file transfers etc)
     - programming file manager app
    
-  - CommandTerm app
-    - menu bar (and other menus inside of it) [DONE]
-    - Input areas
-    - Text based Progress Bars
-    - programming the terminal app
-   
   - aCoder app
     - Code Editor Pane (where user writes actual code)
     - Basic File/Project Tree
@@ -75,7 +64,7 @@
 
 - Make a thing to be able to access PSRAM 
 
-- add the GUI to Astralixi OS, and make all the graphics get loaded to PSRAM
+- add the TUI to Astralixi OS, and make all the graphics get loaded to PSRAM
 
 - release the first actual version of Astralixi OS
 
