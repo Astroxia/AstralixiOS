@@ -9,8 +9,8 @@
 
 - write driver code for luckfox lyra
 
-- start designing GU
-  I
+- start designing TUI
+  
   - menubar (toolbar) [DONE]
     
   - notepad app 
