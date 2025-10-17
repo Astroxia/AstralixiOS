@@ -9,11 +9,9 @@
 
 - write driver code for luckfox lyra
 
-- start designing GUI
+- start designing GU
+  I
   - menubar (toolbar) [DONE]
-  - basic cursor [DONE]
-  - text editing cursor
-  - loading cursor
     
   - notepad app 
     - tool bar [DONE]
