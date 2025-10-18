@@ -3,8 +3,6 @@
   
 - add the C compiler from pshell into Astralixi OS 
 
-- make sure total SRAM usage isn't over 64kb
-
 - make a thing to access PSRAM
 
 - write driver code for luckfox lyra
