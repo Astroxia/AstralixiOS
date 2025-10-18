@@ -9,56 +9,9 @@
 
 - write driver code for luckfox lyra
 
-- start designing TUI
+- design TUI
   
-  - menubar (toolbar) [DONE]
-    
-  - notepad app 
-    - tool bar [DONE]
-    - tool bar menus
-      - file [DONE]
-      - edit [DONE]
-      - settings [DONE]
-      - programming notepad app
-        
-  - calculator app
-    - basic calculator buttons [DONE]
-    - calculations box [DONE]
-    - calculator type changing [DONE]
-    - scientific calculator buttons [DONE]
-    - programming the calculator app
-  
-  - file manager app
-    - save file popup
-    - File Explorer Panel (Left Sidebar) [DONE]
-    - Main Display Area (Right Panel)
-    - Top Toolbar (Navigation & Controls) [DONE]
-    - Right-Click Context Menu [DONE]
-    - File Properties/Details Panel [DONE]
-    - Status Bar (on bottom of the main display area, showing info for things like file transfers etc)
-    - programming file manager app
-   
-  - aCoder app
-    - Code Editor Pane (where user writes actual code)
-    - Basic File/Project Tree
-    - Status Bar (filename, line, column/row, etc)
-    - menu bar (and other menus inside of it)
-    - terminal/output pane
-    - code formatting (syntax highlighting, indendations)
-    - programming the actual app
- 
-  - artista app
-    - Canvas Area (Main Work Area)
-    - main menu/home
-    - menu bar (and other menus inside of it)
-    - Layer Management (on lower right of screen)
-    - Color Picker/Palette (on upper right, 256 colours, 8 bit)
-    - toolbar (on the left of screen, options for pixel brush size, etc)
-    - programming the art editor app.
-   
-  - character font sheet (1p = 1p, 2p = 1p and 3p = 1p)
-   
-  - Programming the whole GUI into PSRAM
+- Programming the whole TUI into PSRAM
 
 - Make a thing to be able to access PSRAM 
 
