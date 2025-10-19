@@ -7,8 +7,11 @@
 - Programming the whole TUI into PSRAM 
 - add the TUI to Astralixi OS, and make all the graphics get loaded to PSRAM
 - release the first actual version of Astralixi OS
+- transfer documentation to wiki, and add new stuff in
 
 _______________________________________________________________________________________________________________________________________________________________________________________________________________
 
 - Make PicoCalc ebook reader for Astralixi OS (file support for mobi only)
 - add the C compiler from pshell into Astralixi OS
+- make a modularity functionality for Astralixi OS
+- add new stuff to wiki
