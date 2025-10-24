@@ -3,11 +3,10 @@
 - make a thing to access PSRAM
 - write driver code for luckfox lyra
 - design TUI
-- Make a thing to be able to access PSRAM
-- Programming the whole TUI into PSRAM 
-- add the TUI to Astralixi OS, and make all the graphics get loaded to PSRAM
-- release the first actual version of Astralixi OS
+- add the TUI to Astralixi OS, and make all the graphics get loaded efficiently
+- make sure total ram usage of Astralixi OS is no more than 28mb of ram
 - transfer documentation to wiki, and add new stuff in
+- release the first actual version of Astralixi OS
 
 _______________________________________________________________________________________________________________________________________________________________________________________________________________
 
