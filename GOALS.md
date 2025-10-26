@@ -1,6 +1,5 @@
 ## Current Goals:
 - battery command (percentage) 
-- make a thing to access PSRAM
 - write driver code for luckfox lyra
 - design TUI
 - add the TUI to Astralixi OS, and make all the graphics get loaded efficiently
