@@ -1,15 +1,12 @@
 ## Current Goals:
-- battery command (percentage) 
+- make hybrid kernel 
 - write driver code for luckfox lyra
-- design TUI
 - add the TUI to Astralixi OS, and make all the graphics get loaded efficiently
-- make sure total ram usage of Astralixi OS is no more than 28mb of ram
+- make sure total ram usage of Astralixi OS is no more than 16mb of ram
+- integrate C interpreter
+- make C interpreter work with running apps
+- Make C interpreter work with running plugins
+- Code basic apps
 - transfer documentation to wiki, and add new stuff in
-- release the first actual version of Astralixi OS
-
-_______________________________________________________________________________________________________________________________________________________________________________________________________________
-
-- Make PicoCalc ebook reader for Astralixi OS (file support for mobi only)
-- add the C compiler from pshell into Astralixi OS
-- make a modularity functionality for Astralixi OS
-- add new stuff to wiki
+- Test for all and any bugs
+- release Astralixi OS Version Ultra
