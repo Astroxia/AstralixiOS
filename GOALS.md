@@ -1,7 +1,6 @@
 ## Current Goals:
 - make hybrid kernel 
 - write driver code for luckfox lyra
-- add the TUI to Astralixi OS, and make all the graphics get loaded efficiently
 - make sure total ram usage of Astralixi OS is no more than 16mb of ram
 - integrate C interpreter
 - make C interpreter work with running apps
