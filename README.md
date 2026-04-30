@@ -5,7 +5,7 @@ Astralixi OS is a lightweight operating system designed for embedded and handhel
 - Lightweight & Fast: Designed to work efficiently with limited resources.
 - Terminal-User-Interface: A clean, fully TUI-based experience — no desktop, no clutter.
 - Space & Tech Focused: Tailored for space enthusiasts, while remaining approachable for the technically curious.
-- Open-Source Kernel: Built on a stripped-down, minimal Linux kernel — lean, transparent, and community-auditable.
+- Open-Source Kernel: Built on a stripped-down, minimal Linux kernel - lean, transparent, and community-auditable.
 
 ## License
 The Astralixi OS kernel is released under the GNU General Public License. All other components of the OS are proprietary. See the LICENSE file for more details.
