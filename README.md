@@ -16,6 +16,8 @@ Forums: Go to the *discussions* page on the project repository for the "forums"!
 Astrox Youtube: https://youtube.com/@astroxia
 Astrox Reddit: https://reddit.com/user/astrox_yt
 
+### Original Kernel sourced from: https://github.com/ak-rex/ClockworkPi-linux
+
 ---
 
 ## ⚠️ End of Life Notice
