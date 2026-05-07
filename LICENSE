@@ -620,6 +620,53 @@ copy of the Program in return for a fee.
 
                      END OF TERMS AND CONDITIONS
 
+             ADDITIONAL TERMS PURSUANT TO SECTION 7 OF THE
+                    GNU GENERAL PUBLIC LICENSE VERSION 3
+
+  The following additional terms apply to this Program and all covered
+works, as permitted under Section 7 of the GNU General Public License
+version 3.
+
+  ATTRIBUTION REQUIREMENT (Section 7(b)):
+
+  Any distribution or conveyance of this Program, or any covered work
+based on the Program, that includes an interactive user interface (including
+but not limited to a terminal user interface, TUI, CLI, or graphical
+interface) MUST display a clear and prominent credit to the original
+developer each time the Program is run or started in interactive mode.
+
+  This credit notice must:
+
+    1. Be displayed in the user interface itself when the program starts
+       or is otherwise run — not solely in source code, documentation,
+       repository metadata, or packaging materials.
+
+    2. Be clearly visible and legible to the end user, and not hidden,
+       obscured, suppressed, or displayed in a manner designed to be
+       overlooked (e.g., must not be printed only in a suppressed log
+       level or require a special flag to display).
+
+    3. Identify the original developer by name and include a reference
+       to the original source repository or project homepage.
+
+    4. Be present in all versions of the Program, whether unmodified,
+       modified, or incorporated as part of a larger work.
+
+  An example of an acceptable notice:
+
+    Originally developed by Astroxia (@astr0x on Cyberspace)
+    Source: https://github.com/Astroxia/AstralixiOS/
+
+  This requirement constitutes a "preservation of author attributions"
+condition under Section 7(b) of the GNU General Public License version 3
+and is a binding additional term that applies to all recipients of the
+Program. Recipients who convey covered works must ensure this requirement
+is passed on to all downstream recipients.
+
+  Failure to include this attribution as specified constitutes a breach of
+this License and will automatically terminate the rights granted hereunder
+pursuant to Section 8.
+
             How to Apply These Terms to Your New Programs
 
   If you develop a new program, and you want it to be of the greatest
