@@ -1,68 +1,211 @@
 ================================================================================
-  ASTRALIXI OS — uConsole CM4 Image Build Guide
-  Repeatable & Distributable
+  ASTRALIXI OS — Pre-release Build Guide
+  Target: ClockworkPi uConsole (CM4) · Forward-compatible: All ARM32/ARM64
+  Kernel: 6.12.85-nomodule (community-provided, via ClockworkPi forums)
 ================================================================================
 
 OVERVIEW
 --------
 This guide builds a minimal bootable .img for the ClockworkPi uConsole (CM4
-module). The final image is as small as possible — just large enough to hold
-the boot partition and your OS. When flashed to a microSD card, the remaining
-unallocated space is claimed at first boot as a third "storage" partition by
-a resize script included in the build.
+module) using the community-vetted 6.12.85-nomodule kernel archive and a
+pi-gen fork pre-configured for ClockworkPi hardware. It is the result of
+community feedback from the Astralixi OS megathread.
 
-Target hardware : ClockworkPi uConsole with Compute Module 4 (CM4)
-Architecture    : ARM64 (aarch64)
-Image size      : ~512 MB (boot 256 MB FAT32 + rootfs ~200 MB ext4)
-Final SD layout : p1=BOOT(FAT32) | p2=rootfs(ext4) | p3=storage(ext4, auto)
+The image is built via ak-rex's ClockworkPi-pi-gen fork (stages 0–2 only),
+giving a minimal Linux shell. Your Python application and credentials layer
+are dropped in on top after pi-gen produces the rootfs.
+
+Target hardware   : ClockworkPi uConsole CM4 (primary)
+Forward compat    : All Raspberry Pi ARM32 + ARM64 devices (DTBs + overlays
+                    for Pi 2B through Pi 5 / CM5 are included in the kernel
+                    archive — the firmware selects the correct one at boot)
+Architecture      : ARM64 (aarch64) — kernel8.img
+Kernel            : 6.12.85-nomodule (community build, rex / ClockworkPi forums)
+Base OS           : Debian Trixie (via ClockworkPi pi-gen fork)
+Build machine     : Raspberry Pi OS Trixie (native ARM64, e.g. the uConsole
+                    itself) — Docker path also documented below
 
 
 --------------------------------------------------------------------------------
 SECTION 1 — PREREQUISITES
 --------------------------------------------------------------------------------
 
-You need a Linux machine (or WSL2 on Windows) to build the image.
-The uConsole itself running Pi OS works fine as the build machine.
-
-Install required tools:
+Install required tools on your build machine:
 
   sudo apt-get update
-  sudo apt-get install -y parted dosfstools e2fsprogs mtools coreutils
+  sudo apt-get install -y \
+      git parted dosfstools e2fsprogs mtools coreutils \
+      coreutils quilt qemu-user-binfmt debootstrap zerofree \
+      libarchive-tools libcap2-bin grep rsync xz-utils file \
+      curl bc gpg pigz xxd arch-test bmap-tools kmod p7zip-full
+
+NOTE: If building natively on the uConsole / Pi OS ARM64, qemu-user-binfmt
+is still needed by pi-gen internally even on native ARM builds.
 
 
 --------------------------------------------------------------------------------
-SECTION 2 — FILE CHECKLIST
+SECTION 2 — KERNEL ARCHIVE
 --------------------------------------------------------------------------------
 
-Gather the following files into a single directory before starting.
+You have been given the file:
+
+    6_12_85-nomodule-kernel.7z
+
+This archive (community-provided by rex on the ClockworkPi forums) contains
+the 6.12.85-nomodule kernel and the full overlay + DTB set covering:
+
+  Pi 2B, 3B, 3B+, 3A+, Zero 2 W       — bcm2710-* / bcm2837-* DTBs
+  Pi 4B, Pi 400, CM4, CM4S, CM4 IO    — bcm2711-* DTBs
+  Pi 5, Pi 500, CM5 variants           — bcm2712-* DTBs
+  uConsole hardware overlay            — clockworkpi-uconsole.dtbo
+  uConsole CM3 variant                 — clockworkpi-uconsole-cm3.dtbo
+  uConsole CM5 variant                 — clockworkpi-uconsole-cm5.dtbo
+  DevTerm overlays                     — clockworkpi-devterm*.dtbo
+  Custom battery overlay               — clockworkpi-custom-battery.dtbo
+
+Extract the archive now and keep it handy — the build script will pull from it:
+
+  7z x 6_12_85-nomodule-kernel.7z
+
+This produces the directory: 6.12.85-nomodule-kernel/
+
+
+--------------------------------------------------------------------------------
+SECTION 3 — CLONE pi-gen & CONFIGURE
+--------------------------------------------------------------------------------
+
+Clone the ClockworkPi pi-gen fork:
+
+  git clone https://github.com/ak-rex/ClockworkPi-pi-gen.git
+  cd ClockworkPi-pi-gen
+
+Disable stages 3 and 4 — you only need a minimal shell (stages 0–2):
+
+  touch stage3/SKIP stage4/SKIP
+  touch stage3/SKIP_IMAGES stage4/SKIP_IMAGES
+
+Also remove the alternative stage2 variants that are not needed:
+
+  touch stage2-kde-testing/SKIP
+  touch stage2-retropie/SKIP
+
+Edit the pi-gen config file (repo root: config) so it reads exactly:
+
+  cat > config << 'EOF'
+  IMG_NAME="AstralixiOS-Pre-release"
+  RELEASE="trixie"
+  DEPLOY_COMPRESSION="none"
+  TARGET_HOSTNAME="astralixi-uconsole"
+  FIRST_USER_NAME="pi"
+  FIRST_USER_PASS="clockworkpi"
+  ENABLE_SSH=0
+  STAGE_LIST="stage0 stage1 stage2"
+  EOF
+
+Key changes from upstream defaults:
+  IMG_NAME        → "AstralixiOS-Pre-release" (release branding)
+  TARGET_HOSTNAME → "astralixi-uconsole"
+  STAGE_LIST      → stages 0–2 only (minimal shell, no desktop)
+
+
+--------------------------------------------------------------------------------
+SECTION 4 — BUILD pi-gen BASE IMAGE
+--------------------------------------------------------------------------------
+
+Run the pi-gen build (from inside the ClockworkPi-pi-gen directory):
+
+  sudo bash build.sh
+
+This will take 20–60 minutes depending on your hardware and internet speed.
+The output image will land in:
+
+  deploy/AstralixiOS-Pre-release-<date>-lite.img
+
+If the build fails part-way through, resume it with:
+
+  sudo CONTINUE=1 bash build.sh
+
+Docker alternative (for non-Debian build machines):
+
+  vi config          # edit as shown in Section 3
+  sudo bash build-docker.sh
+
+After the Docker build completes, remove the work container:
+
+  docker rm -v pigen_work
+
+
+--------------------------------------------------------------------------------
+SECTION 5 — FILE CHECKLIST (before running the Astralixi layer script)
+--------------------------------------------------------------------------------
+
+After pi-gen completes, gather the following into a single directory.
 Call it: astralixi-files/
 
-  FROM YOUR PI OS INSTALLATION (copy from /boot/firmware/ on the uConsole):
-  ├── kernel8.img                  — ARM64 kernel image
-  └── overlays/                    — entire overlays directory (copy the folder)
+  FROM THE EXTRACTED KERNEL ARCHIVE (6.12.85-nomodule-kernel/):
+  ├── kernel8.img                       — ARM64 kernel (required)
+  ├── bcm2711-rpi-cm4.dtb               — CM4 DTB (required for uConsole)
+  ├── bcm2711-rpi-cm4s.dtb              — CM4S variant
+  ├── bcm2711-rpi-cm4-io.dtb            — CM4 IO board variant
+  ├── bcm2711-rpi-4-b.dtb               — Pi 4B
+  ├── bcm2711-rpi-400.dtb               — Pi 400
+  ├── bcm2712-rpi-5-b.dtb               — Pi 5
+  ├── bcm2712-rpi-500.dtb               — Pi 500
+  ├── bcm2712-rpi-cm5-cm4io.dtb         — CM5 on CM4 IO board
+  ├── bcm2712-rpi-cm5-cm5io.dtb         — CM5 on CM5 IO board
+  ├── bcm2712-rpi-cm5l-cm4io.dtb        — CM5L on CM4 IO board
+  ├── bcm2712-rpi-cm5l-cm5io.dtb        — CM5L on CM5 IO board
+  ├── bcm2712d0-rpi-5-b.dtb             — Pi 5 D0 stepping
+  ├── bcm2712-d-rpi-5-b.dtb             — Pi 5 D variant
+  ├── bcm2710-rpi-2-b.dtb               — Pi 2B (ARM32 compat)
+  ├── bcm2710-rpi-3-b.dtb               — Pi 3B
+  ├── bcm2710-rpi-3-b-plus.dtb          — Pi 3B+
+  ├── bcm2710-rpi-cm0.dtb               — CM0
+  ├── bcm2710-rpi-cm3.dtb               — CM3
+  ├── bcm2710-rpi-zero-2-w.dtb          — Pi Zero 2 W
+  ├── bcm2710-rpi-zero-2.dtb            — Pi Zero 2
+  ├── bcm2837-rpi-3-a-plus.dtb          — Pi 3A+
+  ├── bcm2837-rpi-3-b.dtb               — Pi 3B (bcm2837)
+  ├── bcm2837-rpi-3-b-plus.dtb          — Pi 3B+
+  ├── bcm2837-rpi-cm3-io3.dtb           — CM3 IO3
+  ├── bcm2837-rpi-zero-2-w.dtb          — Pi Zero 2 W (bcm2837)
+  └── overlays/                         — ENTIRE overlays directory (copy folder)
+        (must include clockworkpi-uconsole.dtbo,
+         clockworkpi-uconsole-cm3.dtbo,
+         clockworkpi-uconsole-cm5.dtbo,
+         clockworkpi-custom-battery.dtbo,
+         and all others from the archive)
+
+  FROM YOUR pi-gen OUTPUT (deploy/):
+  └── AstralixiOS-Pre-release-*.img     — base rootfs image from pi-gen
 
   YOUR OWN FILES:
-  ├── astralixi-arm64              — your compiled OS binary (Nuitka ARM64)
-  └── CREDENTIALS.txt              — credentials file (optional, Username: / Password: format)
-                                     If omitted, the credentials store is created empty.
-                                     Add credentials later: nano /etc/astralixi/.credentials
+  ├── astralixi-arm64                   — your compiled OS binary (Nuitka ARM64)
+  └── CREDENTIALS.txt                   — optional: Username: / Password: format
+                                          If omitted, credentials store is empty.
+                                          Add later: nano /etc/astralixi/.credentials
 
-  GENERATED BY THIS SCRIPT:
-  ├── bcm2711-rpi-cm4.dtb          — auto-fetched or copy from /boot/firmware/
-  ├── config.txt                   — generated below
-  └── cmdline.txt                  — generated below
-
-Copy Pi OS boot files on the uConsole from the files that rex sent on ClockworkPi forums on
-Astralixi OS megathread.
+IMPORTANT — all DTBs and the complete overlays/ folder come from the
+6.12.85-nomodule-kernel.7z archive provided by rex. Do NOT use DTBs or
+overlays from your system's /boot/firmware/. The community-provided kernel
+requires its matching DTBs.
 
 
 --------------------------------------------------------------------------------
-SECTION 3 — CONFIGURATION FILES
+SECTION 6 — BOOT CONFIGURATION (config.txt)
 --------------------------------------------------------------------------------
 
-Create config.txt inside astralixi-files/:
+The config.txt below is the corrected version incorporating community feedback.
+It activates the uConsole hardware overlay (clockworkpi-uconsole) which was
+missing from the previous build, causing the black screen.
+
+This config.txt is placed in astralixi-files/ and the build script writes it
+to the boot partition, REPLACING the pi-gen default:
 
   cat > ~/astralixi-files/config.txt << 'EOF'
+  # Astralixi OS Pre-release — uConsole CM4 boot config
+  # Kernel: 6.12.85-nomodule (ClockworkPi community build)
+
   [all]
   arm_64bit=1
   kernel=kernel8.img
@@ -81,21 +224,29 @@ Create config.txt inside astralixi-files/:
   over_voltage=2
 
   [cm4]
+  # CM4-specific: uConsole hardware activation overlay (REQUIRED for display)
+  dtoverlay=clockworkpi-uconsole
   dtparam=act_led_trigger=default-on
   dtparam=act_led_activelow=off
   EOF
 
-cmdline.txt is generated automatically by the build script in Section 4
-(it needs the disk UUID which isn't known until the image is created).
+NOTE: The critical addition vs the previous build is:
+    dtoverlay=clockworkpi-uconsole
+This overlay activates the uConsole's display, keyboard, and hardware bus
+routing. Without it the screen stays black even if the kernel boots.
 
 
 --------------------------------------------------------------------------------
-SECTION 4 — BUILD SCRIPT
+SECTION 7 — BUILD SCRIPT (Astralixi layer)
 --------------------------------------------------------------------------------
 
-Save the following as: build_astralixi.sh
-Make it executable: chmod +x build_astralixi.sh
-Run as root:        sudo bash build_astralixi.sh
+This script takes the pi-gen base image, replaces the boot partition with the
+community kernel + correct config.txt, and injects the Astralixi application
+layer into the rootfs.
+
+Save as: build_astralixi.sh
+Make executable: chmod +x build_astralixi.sh
+Run as root: sudo bash build_astralixi.sh
 
 ================== BEGIN build_astralixi.sh ====================================
 
@@ -103,82 +254,103 @@ Run as root:        sudo bash build_astralixi.sh
 set -e
 
 # ── Configuration ────────────────────────────────────────────────────────────
-FILES_DIR="./astralixi-files"       # directory with all gathered files
-OUTPUT_IMG="./astralixi-cm4.img"	
-OS_BINARY="astralixi-arm64"         # name of your compiled binary in FILES_DIR
-CREDENTIALS="CREDENTIALS.txt"       # credentials file in FILES_DIR
-
-BOOT_SIZE_MB=256                    # FAT32 boot partition size
-# Rootfs is sized just large enough to fit content + 20% headroom.
-# The remaining SD card space becomes a storage partition at first boot.
+FILES_DIR="./astralixi-files"        # directory with all gathered files
+PIGEN_IMG=$(ls "$FILES_DIR"/AstralixiOS-Pre-release-*.img 2>/dev/null | head -1)
+OUTPUT_IMG="./astralixi-uconsole.img"
+KERNEL_DIR="./6.12.85-nomodule-kernel"  # extracted from 7z archive
+OS_BINARY="astralixi-arm64"             # compiled binary in FILES_DIR
+CREDENTIALS="CREDENTIALS.txt"           # optional credentials file
 # ─────────────────────────────────────────────────────────────────────────────
 
-echo "=== Astralixi OS Image Builder ==="
+echo "=== Astralixi OS Pre-release Image Builder ==="
 echo ""
 
 # ── Validate inputs ──────────────────────────────────────────────────────────
-for f in kernel8.img bcm2711-rpi-cm4.dtb config.txt; do
-    if [ ! -f "$FILES_DIR/$f" ]; then
-        echo "ERROR: Missing required file: $FILES_DIR/$f"
+if [ -z "$PIGEN_IMG" ] || [ ! -f "$PIGEN_IMG" ]; then
+    echo "ERROR: No AstralixiOS-Pre-release-*.img found in $FILES_DIR"
+    echo "       Run pi-gen first (Section 4) and copy the output here."
+    exit 1
+fi
+
+if [ ! -d "$KERNEL_DIR" ]; then
+    echo "ERROR: Kernel directory not found: $KERNEL_DIR"
+    echo "       Extract 6_12_85-nomodule-kernel.7z first: 7z x 6_12_85-nomodule-kernel.7z"
+    exit 1
+fi
+
+for f in kernel8.img bcm2711-rpi-cm4.dtb; do
+    if [ ! -f "$KERNEL_DIR/$f" ]; then
+        echo "ERROR: Missing kernel file: $KERNEL_DIR/$f"
         exit 1
     fi
 done
-if [ ! -d "$FILES_DIR/overlays" ]; then
-    echo "ERROR: Missing overlays/ directory in $FILES_DIR"
+
+if [ ! -d "$KERNEL_DIR/overlays" ]; then
+    echo "ERROR: Missing overlays/ directory in $KERNEL_DIR"
     exit 1
 fi
+
+if [ ! -f "$FILES_DIR/config.txt" ]; then
+    echo "ERROR: Missing config.txt in $FILES_DIR (see Section 6)"
+    exit 1
+fi
+
 if [ ! -f "$FILES_DIR/$OS_BINARY" ]; then
     echo "ERROR: Missing OS binary: $FILES_DIR/$OS_BINARY"
     exit 1
 fi
+
 if [ ! -f "$FILES_DIR/$CREDENTIALS" ]; then
-    echo "[WARN] No credentials file found — image will boot with an empty credentials store"
-    echo "       Add credentials later by editing /etc/astralixi/.credentials on the device"
+    echo "[WARN] No credentials file found — image will boot with empty credentials store"
+    echo "       Edit later: /etc/astralixi/.credentials on device"
     HAS_CREDENTIALS=0
 else
     HAS_CREDENTIALS=1
 fi
+
 echo "[OK] All required input files present"
-
-# ── Calculate rootfs size ────────────────────────────────────────────────────
-BINARY_SIZE=$(du -sm "$FILES_DIR/$OS_BINARY" | cut -f1)
-ROOTFS_CONTENT_MB=$((BINARY_SIZE + 50))          # binary + ~50MB for structure
-ROOTFS_SIZE_MB=$(( (ROOTFS_CONTENT_MB * 120) / 100 ))  # add 20% headroom
-# Minimum 200MB
-if [ "$ROOTFS_SIZE_MB" -lt 200 ]; then ROOTFS_SIZE_MB=200; fi
-
-echo "[INFO] Binary size: ${BINARY_SIZE}MB — rootfs partition: ${ROOTFS_SIZE_MB}MB"
-
-TOTAL_MB=$((1 + BOOT_SIZE_MB + ROOTFS_SIZE_MB + 1))
-echo "[INFO] Total image size: ${TOTAL_MB}MB"
+echo "     Base image : $PIGEN_IMG"
 echo ""
 
-# ── Create image file ────────────────────────────────────────────────────────
-echo "[1/8] Creating image file..."
-dd if=/dev/zero of="$OUTPUT_IMG" bs=1M count="$TOTAL_MB" status=none
-echo "      $OUTPUT_IMG (${TOTAL_MB}MB)"
+# ── Copy pi-gen image as working base ────────────────────────────────────────
+echo "[1/9] Copying pi-gen base image..."
+cp "$PIGEN_IMG" "$OUTPUT_IMG"
+echo "      $OUTPUT_IMG"
 
-# ── Partition table ──────────────────────────────────────────────────────────
-echo "[2/8] Writing partition table..."
-BOOT_END_MB=$((1 + BOOT_SIZE_MB))
-ROOTFS_END_MB=$((BOOT_END_MB + ROOTFS_SIZE_MB))
+# ── Mount the image ──────────────────────────────────────────────────────────
+echo "[2/9] Mounting image partitions..."
+LOOP=$(losetup -f --show -P "$OUTPUT_IMG")
+sleep 1
+partprobe "$LOOP" 2>/dev/null || true
+sleep 1
 
-parted -s "$OUTPUT_IMG" \
-    mklabel msdos \
-    mkpart primary fat32 1MiB ${BOOT_END_MB}MiB \
-    mkpart primary ext4  ${BOOT_END_MB}MiB ${ROOTFS_END_MB}MiB \
-    set 1 boot on
+BOOT_MNT=$(mktemp -d)
+ROOT_MNT=$(mktemp -d)
+mount "${LOOP}p1" "$BOOT_MNT"
+mount "${LOOP}p2" "$ROOT_MNT"
 
-# ── Set fixed disk UUID ──────────────────────────────────────────────────────
-# Write a fixed disk identifier so PARTUUIDs are deterministic
-python3 - "$OUTPUT_IMG" << 'PYEOF'
-import struct, sys
-with open(sys.argv[1], 'r+b') as f:
-    f.seek(440)
-    f.write(struct.pack('<I', 0x61737472))   # 'astr' in little-endian
-PYEOF
+# ── Replace boot partition with community kernel ──────────────────────────────
+echo "[3/9] Installing community kernel 6.12.85-nomodule into boot partition..."
 
-DISK_ID="61727473"   # NOTE: read back as little-endian = 0x61737472
+# Clear existing kernel/DTB/overlay files
+rm -f  "$BOOT_MNT"/kernel*.img
+rm -f  "$BOOT_MNT"/*.dtb
+rm -rf "$BOOT_MNT"/overlays
+
+# Copy entire kernel archive contents into boot partition
+cp "$KERNEL_DIR/kernel8.img"   "$BOOT_MNT/"
+cp "$KERNEL_DIR"/*.dtb          "$BOOT_MNT/"
+cp -r "$KERNEL_DIR/overlays"   "$BOOT_MNT/"
+
+echo "      Kernel + all DTBs + overlays installed"
+
+# ── Install corrected config.txt ─────────────────────────────────────────────
+echo "[4/9] Installing corrected config.txt (with uConsole hardware overlay)..."
+cp "$FILES_DIR/config.txt" "$BOOT_MNT/config.txt"
+echo "      config.txt installed (dtoverlay=clockworkpi-uconsole active)"
+
+# ── Update cmdline.txt with correct PARTUUID ────────────────────────────────
+echo "[5/9] Updating cmdline.txt..."
 DISK_ID=$(python3 -c "
 import struct
 with open('$OUTPUT_IMG','rb') as f:
@@ -186,83 +358,35 @@ with open('$OUTPUT_IMG','rb') as f:
 print(f'{v:08x}')
 ")
 P2_PARTUUID="${DISK_ID}-02"
-P3_PARTUUID="${DISK_ID}-03"
-echo "      Disk ID: 0x${DISK_ID} — rootfs PARTUUID: ${P2_PARTUUID}"
+printf 'console=serial0,115200 console=tty1 root=PARTUUID=%s rootfstype=ext4 fsck.repair=yes rootwait quiet' \
+    "$P2_PARTUUID" > "$BOOT_MNT/cmdline.txt"
+echo "      rootfs PARTUUID: ${P2_PARTUUID}"
 
-# ── Format partitions ────────────────────────────────────────────────────────
-echo "[3/8] Formatting partitions..."
-LOOP=$(losetup -f --show -P "$OUTPUT_IMG")
-sleep 1
-partprobe "$LOOP" 2>/dev/null || true
-sleep 1
+# ── Inject Astralixi application layer into rootfs ───────────────────────────
+echo "[6/9] Injecting Astralixi application layer into rootfs..."
 
-mkfs.fat -F 32 -n "BOOT"   "${LOOP}p1" > /dev/null
-mkfs.ext4 -L "rootfs" -O ^64bit -q "${LOOP}p2"
-
-losetup -d "$LOOP"
-echo "      FAT32 boot + ext4 rootfs formatted"
-
-# ── Populate boot partition (via mtools — no kernel module needed) ────────────
-echo "[4/8] Populating boot partition..."
-BOOT_OFFSET=$((2048 * 512))   # partition 1 starts at sector 2048
-
-# Generate cmdline.txt now that we have the PARTUUID
-printf 'console=serial0,115200 console=tty1 root=PARTUUID=%s rootfstype=ext4 fsck.repair=yes rootwait quiet init=/sbin/init' \
-    "$P2_PARTUUID" > /tmp/_cmdline.txt
-
-# Copy boot files
-for f in kernel8.img bcm2711-rpi-cm4.dtb config.txt; do
-    mcopy -i "${OUTPUT_IMG}@@${BOOT_OFFSET}" "$FILES_DIR/$f" :: 2>/dev/null
-done
-mcopy -i "${OUTPUT_IMG}@@${BOOT_OFFSET}" /tmp/_cmdline.txt ::cmdline.txt 2>/dev/null
-
-# Copy overlays directory
-mmd -i "${OUTPUT_IMG}@@${BOOT_OFFSET}" ::overlays 2>/dev/null
-mcopy -i "${OUTPUT_IMG}@@${BOOT_OFFSET}" -s "$FILES_DIR/overlays/"* ::overlays/ 2>/dev/null
-
-echo "      Boot partition populated"
-
-# ── Populate rootfs ──────────────────────────────────────────────────────────
-echo "[5/8] Populating rootfs..."
-LOOP=$(losetup -f --show -P "$OUTPUT_IMG")
-sleep 1
-partprobe "$LOOP" 2>/dev/null || true
-sleep 1
-ROOTFS_MNT=$(mktemp -d)
-mount "${LOOP}p2" "$ROOTFS_MNT"
-
-# Standard directory tree
-for d in bin boot dev etc home lib lib64 media mnt opt proc root run sbin srv sys tmp usr var; do
-    mkdir -p "$ROOTFS_MNT/$d"
-done
-mkdir -p "$ROOTFS_MNT/usr/bin" "$ROOTFS_MNT/usr/lib" "$ROOTFS_MNT/usr/sbin" \
-         "$ROOTFS_MNT/usr/share" "$ROOTFS_MNT/usr/local/bin"
-mkdir -p "$ROOTFS_MNT/var/log" "$ROOTFS_MNT/var/run" "$ROOTFS_MNT/var/tmp" \
-         "$ROOTFS_MNT/var/spool"
-mkdir -p "$ROOTFS_MNT/etc/systemd/system/multi-user.target.wants"
-mkdir -p "$ROOTFS_MNT/etc/network" "$ROOTFS_MNT/etc/wpa_supplicant"
-mkdir -p "$ROOTFS_MNT/opt/astralixi" "$ROOTFS_MNT/etc/astralixi"
-mkdir -p "$ROOTFS_MNT/mnt/storage"
-
-chmod 1777 "$ROOTFS_MNT/tmp" "$ROOTFS_MNT/var/tmp"
-chmod 700  "$ROOTFS_MNT/root"
+mkdir -p "$ROOT_MNT/opt/astralixi"
+mkdir -p "$ROOT_MNT/etc/astralixi"
+mkdir -p "$ROOT_MNT/mnt/storage"
+mkdir -p "$ROOT_MNT/etc/systemd/system/multi-user.target.wants"
 
 # OS binary
-cp "$FILES_DIR/$OS_BINARY" "$ROOTFS_MNT/opt/astralixi/astralixi"
-chmod +x "$ROOTFS_MNT/opt/astralixi/astralixi"
+cp "$FILES_DIR/$OS_BINARY" "$ROOT_MNT/opt/astralixi/astralixi"
+chmod +x "$ROOT_MNT/opt/astralixi/astralixi"
 
-# Hidden credentials (root-only, dot-prefixed)
-# If no credentials file was provided, create an empty placeholder instead
+# Credentials
 if [ "$HAS_CREDENTIALS" = "1" ]; then
-    cp "$FILES_DIR/$CREDENTIALS" "$ROOTFS_MNT/etc/astralixi/.credentials"
+    cp "$FILES_DIR/$CREDENTIALS" "$ROOT_MNT/etc/astralixi/.credentials"
 else
-    printf 'Username:\nPassword:\n' > "$ROOTFS_MNT/etc/astralixi/.credentials"
+    printf 'Username:\nPassword:\n' > "$ROOT_MNT/etc/astralixi/.credentials"
 fi
-chmod 600 "$ROOTFS_MNT/etc/astralixi/.credentials"
-ln -s /etc/astralixi/.credentials "$ROOTFS_MNT/opt/astralixi/.credentials"
+chmod 600 "$ROOT_MNT/etc/astralixi/.credentials"
 
-# Credential reader helper for Python
-cat > "$ROOTFS_MNT/opt/astralixi/read_credentials.py" << 'PYEOF'
+# Symlink for convenience
+ln -sf /etc/astralixi/.credentials "$ROOT_MNT/opt/astralixi/.credentials"
+
+# Credential reader helper
+cat > "$ROOT_MNT/opt/astralixi/read_credentials.py" << 'PYEOF'
 #!/usr/bin/env python3
 """
 Astralixi credential reader.
@@ -296,75 +420,21 @@ if __name__ == '__main__':
     print(f"Username: {c['username']}")
     print(f"Password: {'*' * len(c['password']) or '(empty)'}")
 PYEOF
-chmod +x "$ROOTFS_MNT/opt/astralixi/read_credentials.py"
+chmod +x "$ROOT_MNT/opt/astralixi/read_credentials.py"
 
-# /etc files
-echo "uconsole" > "$ROOTFS_MNT/etc/hostname"
-
-cat > "$ROOTFS_MNT/etc/hosts" << 'EOF'
-127.0.0.1   localhost
-127.0.1.1   uconsole
-::1         localhost ip6-localhost ip6-loopback
-EOF
-
-cat > "$ROOTFS_MNT/etc/fstab" << EOF
-PARTUUID=${DISK_ID}-01  /boot    vfat  defaults,ro          0  2
-PARTUUID=${DISK_ID}-02  /        ext4  defaults,noatime     0  1
-PARTUUID=${DISK_ID}-03  /mnt/storage  ext4  defaults,nofail,noatime  0  3
-tmpfs                   /tmp     tmpfs defaults,nosuid,nodev 0  0
-EOF
-
-cat > "$ROOTFS_MNT/etc/os-release" << 'EOF'
+# /etc/os-release — Astralixi branding
+cat > "$ROOT_MNT/etc/os-release" << 'EOF'
 NAME="Astralixi OS"
-VERSION="1.0"
+VERSION="Pre-release"
 ID=astralixi
-PRETTY_NAME="Astralixi OS 1.0 (CM4)"
-VERSION_ID="1.0"
+ID_LIKE=debian
+PRETTY_NAME="Astralixi OS Pre-release (uConsole CM4)"
+VERSION_ID="pre-release"
+HOME_URL="https://astralixi.com"
 EOF
 
-cat > "$ROOTFS_MNT/etc/passwd" << 'EOF'
-root:x:0:0:root:/root:/bin/sh
-nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
-EOF
-
-cat > "$ROOTFS_MNT/etc/group" << 'EOF'
-root:x:0:
-nogroup:x:65534:
-EOF
-
-cat > "$ROOTFS_MNT/etc/shadow" << 'EOF'
-root:!:19850:0:99999:7:::
-EOF
-chmod 640 "$ROOTFS_MNT/etc/shadow"
-
-cat > "$ROOTFS_MNT/etc/profile" << 'EOF'
-export PATH="/opt/astralixi:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-export CREDENTIALS_FILE="/etc/astralixi/.credentials"
-EOF
-
-cat > "$ROOTFS_MNT/etc/network/interfaces" << 'EOF'
-auto lo
-iface lo inet loopback
-allow-hotplug eth0
-iface eth0 inet dhcp
-allow-hotplug wlan0
-iface wlan0 inet dhcp
-    wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
-EOF
-
-cat > "$ROOTFS_MNT/etc/wpa_supplicant/wpa_supplicant.conf" << 'EOF'
-ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-update_config=1
-country=AU
-# network={
-#     ssid="YourSSID"
-#     psk="YourPassword"
-# }
-EOF
-chmod 600 "$ROOTFS_MNT/etc/wpa_supplicant/wpa_supplicant.conf"
-
-# systemd service for the astralixi binary
-cat > "$ROOTFS_MNT/etc/systemd/system/astralixi.service" << 'EOF'
+# systemd service
+cat > "$ROOT_MNT/etc/systemd/system/astralixi.service" << 'EOF'
 [Unit]
 Description=Astralixi OS Main Service
 After=network.target local-fs.target
@@ -382,75 +452,56 @@ WorkingDirectory=/opt/astralixi
 WantedBy=multi-user.target
 EOF
 
-ln -s /etc/systemd/system/astralixi.service \
-      "$ROOTFS_MNT/etc/systemd/system/multi-user.target.wants/astralixi.service"
+ln -sf /etc/systemd/system/astralixi.service \
+       "$ROOT_MNT/etc/systemd/system/multi-user.target.wants/astralixi.service"
 
 # ── First-boot storage expander ──────────────────────────────────────────────
-# This script runs once on first boot. It creates p3 using all remaining
-# unallocated space on the SD card, formats it ext4, and mounts it at
-# /mnt/storage. Then it disables itself so it never runs again.
-cat > "$ROOTFS_MNT/usr/local/bin/expand-storage.sh" << 'EXPANDEOF'
-#!/bin/sh
-# First-boot storage partition expander
-# Runs once via expand-storage.service, then disables itself.
+echo "[7/9] Installing first-boot storage expander..."
 
+cat > "$ROOT_MNT/usr/local/bin/expand-storage.sh" << 'EXPANDEOF'
+#!/bin/sh
+# First-boot storage partition expander — runs once, then disables itself.
 set -e
 DEVICE="/dev/mmcblk0"
 LOG="/var/log/expand-storage.log"
-
 log() { echo "$(date '+%Y-%m-%d %H:%M:%S') $*" | tee -a "$LOG"; }
-
 log "Starting first-boot storage expansion"
-
-# Confirm p3 does not already exist
 if [ -b "${DEVICE}p3" ]; then
     log "p3 already exists — skipping"
     systemctl disable expand-storage.service
     exit 0
 fi
-
-# Get disk size in sectors
 DISK_SECTORS=$(cat /sys/block/mmcblk0/size)
-# Get end of p2 in sectors
 P2_END=$(parted -sm "${DEVICE}" unit s print 2>/dev/null \
     | grep '^2:' | cut -d: -f3 | tr -d 's')
-
 if [ -z "$P2_END" ]; then
     log "ERROR: Could not determine end of p2"
     exit 1
 fi
-
 P3_START=$((P2_END + 1))
 SPACE_REMAINING=$((DISK_SECTORS - P3_START))
-
 if [ "$SPACE_REMAINING" -lt 65536 ]; then
     log "Less than 32MB remaining — skipping storage partition"
     systemctl disable expand-storage.service
     exit 0
 fi
-
 log "Creating p3: sectors ${P3_START} to $((DISK_SECTORS - 1))"
 parted -s "${DEVICE}" mkpart primary ext4 "${P3_START}s" "100%"
 sleep 2
 partprobe "${DEVICE}" 2>/dev/null || true
 sleep 2
-
 log "Formatting p3 as ext4..."
 mkfs.ext4 -L "storage" -q "${DEVICE}p3"
-
 log "Mounting /mnt/storage"
 mkdir -p /mnt/storage
 mount "${DEVICE}p3" /mnt/storage
-
 log "Storage expansion complete — $(df -h /mnt/storage | tail -1)"
-
-# Disable so this never runs again
 systemctl disable expand-storage.service
 log "Service disabled — done"
 EXPANDEOF
-chmod +x "$ROOTFS_MNT/usr/local/bin/expand-storage.sh"
+chmod +x "$ROOT_MNT/usr/local/bin/expand-storage.sh"
 
-cat > "$ROOTFS_MNT/etc/systemd/system/expand-storage.service" << 'EOF'
+cat > "$ROOT_MNT/etc/systemd/system/expand-storage.service" << 'EOF'
 [Unit]
 Description=First-boot storage partition expander
 After=local-fs.target
@@ -466,106 +517,97 @@ RemainAfterExit=yes
 WantedBy=multi-user.target
 EOF
 
-ln -s /etc/systemd/system/expand-storage.service \
-      "$ROOTFS_MNT/etc/systemd/system/multi-user.target.wants/expand-storage.service"
+ln -sf /etc/systemd/system/expand-storage.service \
+       "$ROOT_MNT/etc/systemd/system/multi-user.target.wants/expand-storage.service"
 
-# ── Finalise rootfs ──────────────────────────────────────────────────────────
-echo "      Rootfs populated"
-echo "[6/8] Syncing and unmounting rootfs..."
+# ── Sync and unmount ─────────────────────────────────────────────────────────
+echo "[8/9] Syncing and unmounting..."
 sync
-umount "$ROOTFS_MNT"
-rmdir  "$ROOTFS_MNT"
+umount "$BOOT_MNT"
+umount "$ROOT_MNT"
+rmdir  "$BOOT_MNT"
+rmdir  "$ROOT_MNT"
 losetup -d "$LOOP"
 
-# ── Trim the image to exact size (no wasted zeros) ───────────────────────────
-echo "[7/8] Trimming image to exact partition boundary..."
-FINAL_BYTES=$(python3 -c "
-import subprocess, re
-out = subprocess.check_output(['parted','-sm','$OUTPUT_IMG','unit','B','print'],
-                               stderr=subprocess.DEVNULL).decode()
-ends = re.findall(r'^\d+:.*?:(\d+)B:', out, re.MULTILINE)
-print(max(int(e) for e in ends) + 1 if ends else 0)
-")
-if [ "$FINAL_BYTES" -gt 0 ]; then
-    truncate -s "$FINAL_BYTES" "$OUTPUT_IMG"
-    echo "      Trimmed to $(( FINAL_BYTES / 1024 / 1024 ))MB"
-fi
-
 # ── Done ─────────────────────────────────────────────────────────────────────
-echo "[8/8] Build complete."
+echo "[9/9] Build complete."
 echo ""
 echo "  Output : $OUTPUT_IMG"
 echo "  Size   : $(du -sh "$OUTPUT_IMG" | cut -f1)"
-echo "  p1     : FAT32  BOOT    (${BOOT_SIZE_MB}MB)"
-echo "  p2     : ext4   rootfs  (${ROOTFS_SIZE_MB}MB)"
-echo "  p3     : (auto-created at first boot from remaining SD card space)"
 echo ""
 echo "Flash with:"
 echo "  sudo dd if=$OUTPUT_IMG of=/dev/sdX bs=4M status=progress && sync"
 echo "  — or use Raspberry Pi Imager → 'Use custom image'"
+echo ""
+echo "Boot partition should contain:"
+echo "  kernel8.img, all *.dtb files, overlays/, config.txt, cmdline.txt"
 echo ""
 
 ================== END build_astralixi.sh ======================================
 
 
 --------------------------------------------------------------------------------
-SECTION 5 — RUNNING THE BUILD
+SECTION 8 — RUNNING THE BUILD (summary)
 --------------------------------------------------------------------------------
 
-  1. Gather all files into astralixi-files/ as described in Section 2
-  2. Place build_astralixi.sh in the same parent directory
-  3. Run:
+  Step 1 — Extract the kernel archive (once):
+    7z x 6_12_85-nomodule-kernel.7z
 
-       sudo bash build_astralixi.sh
+  Step 2 — Clone and configure pi-gen:
+    git clone https://github.com/ak-rex/ClockworkPi-pi-gen.git
+    cd ClockworkPi-pi-gen
+    touch stage3/SKIP stage4/SKIP stage3/SKIP_IMAGES stage4/SKIP_IMAGES
+    touch stage2-kde-testing/SKIP stage2-retropie/SKIP
+    # Edit config as shown in Section 3
+    sudo bash build.sh
 
-  Expected output when successful:
+  Step 3 — Gather files into astralixi-files/:
+    cp deploy/AstralixiOS-Pre-release-*.img astralixi-files/
+    # Create config.txt as shown in Section 6
+    # Copy your astralixi-arm64 binary and optional CREDENTIALS.txt
 
-       === Astralixi OS Image Builder ===
-       [OK] All input files present
-       [INFO] Binary size: 20MB — rootfs partition: 85MB
-       [INFO] Total image size: 342MB
-       [1/8] Creating image file...
-       [2/8] Writing partition table...
-       [3/8] Formatting partitions...
-       [4/8] Populating boot partition...
-       [5/8] Populating rootfs...
-       [6/8] Syncing and unmounting rootfs...
-       [7/8] Trimming image to exact partition boundary...
-       [8/8] Build complete.
+  Step 4 — Run the Astralixi layer script:
+    sudo bash build_astralixi.sh
 
-  The output image is trimmed to the smallest size that fits all content.
-  On a 32GB SD card the user gets ~31GB of storage in /mnt/storage.
+  Expected output:
+    === Astralixi OS Pre-release Image Builder ===
+    [OK] All required input files present
+    [1/9] Copying pi-gen base image...
+    [2/9] Mounting image partitions...
+    [3/9] Installing community kernel 6.12.85-nomodule into boot partition...
+    [4/9] Installing corrected config.txt (with uConsole hardware overlay)...
+    [5/9] Updating cmdline.txt...
+    [6/9] Injecting Astralixi application layer into rootfs...
+    [7/9] Installing first-boot storage expander...
+    [8/9] Syncing and unmounting...
+    [9/9] Build complete.
 
 
 --------------------------------------------------------------------------------
-SECTION 6 — FIRST BOOT BEHAVIOUR
+SECTION 9 — FIRST BOOT BEHAVIOUR
 --------------------------------------------------------------------------------
 
 On first boot after flashing:
 
   1. Pi firmware loads kernel8.img from p1 (FAT32)
-  2. Kernel mounts p2 (ext4) as root
-  3. systemd starts astralixi.service (runs /opt/astralixi/astralixi)
-  4. systemd starts expand-storage.service (runs once only):
-       - Detects all unallocated space after p2
-       - Creates p3 as ext4 labelled "storage"
-       - Mounts it at /mnt/storage
-       - Drops a flag file at /var/lib/expanded-storage
+     → Firmware detects board revision fuses, selects correct DTB automatically
+  2. clockworkpi-uconsole overlay activates uConsole display + hardware
+  3. Kernel mounts p2 (ext4) as root (Trixie minimal shell from pi-gen)
+  4. systemd starts astralixi.service → /opt/astralixi/astralixi
+  5. systemd starts expand-storage.service (once only):
+       - Creates p3 from all remaining unallocated SD space
+       - Formats ext4, mounts at /mnt/storage
        - Disables itself permanently
-  5. All subsequent boots: p3 already exists, expander does nothing
 
 
 --------------------------------------------------------------------------------
-SECTION 7 — CREDENTIAL ACCESS FROM PYTHON
+SECTION 10 — CREDENTIAL ACCESS FROM PYTHON
 --------------------------------------------------------------------------------
 
-The credentials file is stored at /etc/astralixi/.credentials
-It is dot-prefixed (hidden) and chmod 600 (root read-only).
-A symlink also exists at /opt/astralixi/.credentials
+Stored at /etc/astralixi/.credentials  (chmod 600, root-only, dot-hidden)
+Symlinked at /opt/astralixi/.credentials
 
-From your application code:
-
-    # Option A — bundled helper module
+    # Option A — bundled helper
     import sys
     sys.path.insert(0, '/opt/astralixi')
     import read_credentials
@@ -581,63 +623,62 @@ From your application code:
             elif line.startswith('Password:'):
                 password = line.split(':', 1)[1].strip()
 
-    # Option C — via environment variable override (useful for testing)
+    # Option C — environment override (testing)
     import os
     path = os.environ.get('CREDENTIALS_FILE', '/etc/astralixi/.credentials')
 
 
 --------------------------------------------------------------------------------
-SECTION 8 — FLASHING
+SECTION 11 — FLASHING
 --------------------------------------------------------------------------------
 
 Linux / macOS (dd):
 
-    sudo dd if=astralixi-cm4.img of=/dev/sdX bs=4M status=progress && sync
+    sudo dd if=astralixi-uconsole.img of=/dev/sdX bs=4M status=progress && sync
 
-    Replace /dev/sdX with your SD card device.
-    Use  lsblk  to identify it. Double-check before writing.
+    Use lsblk to identify your SD card device. Double-check before writing.
 
 Windows:
 
-    Use Raspberry Pi Imager → "Use custom image" → select astralixi-cm4.img
-    Or use balenaEtcher.
+    Raspberry Pi Imager → "Use custom image" → astralixi-uconsole.img
+    Or: balenaEtcher
 
-Verify before removing the card:
-
-    # The boot partition is FAT32 and readable on any OS.
-    # You should see: kernel8.img, bcm2711-rpi-cm4.dtb,
-    #                 config.txt, cmdline.txt, overlays/
+Verify boot partition after flashing (FAT32, readable on any OS):
+  Must contain: kernel8.img, *.dtb (all devices), overlays/ (full folder),
+                config.txt, cmdline.txt
 
 
 --------------------------------------------------------------------------------
-SECTION 9 — TROUBLESHOOTING
+SECTION 12 — TROUBLESHOOTING
 --------------------------------------------------------------------------------
 
-Won't boot / black screen:
-  - Confirm kernel8.img and bcm2711-rpi-cm4.dtb are present in the boot partition
-  - Confirm overlays/ folder is present and non-empty
-  - Serial console: connect at 115200 baud on the UART pins
+Black screen (no display output):
+  → Confirm overlays/ is present and non-empty in the boot partition
+  → Confirm config.txt contains: dtoverlay=clockworkpi-uconsole
+  → This was the primary issue in the previous build — the uConsole hardware
+    overlay was missing. It MUST be present for the display to activate.
+  → Serial console fallback: connect at 115200 baud on UART pins to diagnose
 
-ext4 superblock error / truncated image:
-  - This means the image was copied incompletely or the build was interrupted
-  - Re-run the build script from scratch (it overwrites the output file)
-  - Verify with: file astralixi-cm4.img  (should show DOS/MBR boot sector)
+Screen shows text but locks up / no shell:
+  → Confirm pi-gen ran through stage2 fully (check deploy/ for output image)
+  → Confirm stage3/SKIP and stage4/SKIP are in place before building
+  → The shell is provided by the pi-gen stage2 Trixie rootfs; if stage2
+    did not complete, there will be no login shell
+
+Wrong kernel / DTB mismatch:
+  → Always use the DTBs and overlays from 6_12_85-nomodule-kernel.7z
+  → Never mix DTBs from /boot/firmware/ with this kernel — they must match
+  → All DTBs (Pi 2 through Pi 5 / CM5) are already in the archive
 
 Storage partition not appearing:
-  - Check /var/log/expand-storage.log on the device
-  - Confirm the SD card has free space beyond p2
-  - Run manually: sudo bash /usr/local/bin/expand-storage.sh
+  → Check /var/log/expand-storage.log on the device
+  → Run manually: sudo bash /usr/local/bin/expand-storage.sh
 
-DTB clarification (all three are included in the boot partition):
-  bcm2711-rpi-cm4.dtb      — Standard CM4 module. This is the one the
-                              uConsole uses. Firmware selects it automatically.
-  bcm2711-rpi-cm4s.dtb     — CM4S variant: same chip, no soldered eMMC pads.
-                              For SD-card-only CM4 designs. Not the uConsole.
-  bcm2711-rpi-cm4-io.dtb   — Raspberry Pi's own CM4 IO Board carrier.
-                              Different GPIO/connector layout. Not the uConsole.
-  The bootloader reads the board revision fuses and picks the correct one.
-  You do not need to specify it manually.
+pi-gen build fails:
+  → Resume with: sudo CONTINUE=1 bash build.sh
+  → Ensure build path has no spaces (debootstrap requirement)
+  → On non-Debian host: use the Docker path (build-docker.sh)
 
 ================================================================================
-  END OF BUILD GUIDE
+  END OF BUILD GUIDE — Astralixi OS Pre-release
 ================================================================================
