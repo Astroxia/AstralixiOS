@@ -8,12 +8,15 @@ OVERVIEW
 --------
 This guide builds a minimal bootable .img for the ClockworkPi uConsole (CM4
 module) using the community-vetted 6.12.85-nomodule kernel archive and a
-pi-gen fork pre-configured for ClockworkPi hardware. It is the result of
-community feedback from the Astralixi OS megathread.
+bare Debian Trixie rootfs built directly with debootstrap.
 
-The image is built via ak-rex's ClockworkPi-pi-gen fork (stages 0–2 only),
-giving a minimal Linux shell. Your Python application and credentials layer
-are dropped in on top after pi-gen produces the rootfs.
+Previous versions of this guide used ak-rex's ClockworkPi-pi-gen fork to
+produce the rootfs. That approach is removed. pi-gen builds a full
+Raspberry Pi OS Lite environment — when the Astralixi binary failed to start,
+the system fell back to a Pi OS shell. The new approach builds a minimal
+Debian Trixie rootfs from scratch using debootstrap, with no Pi OS layer at
+all. The Astralixi binary is the only thing that runs on tty1. There is no
+login shell to fall back to.
 
 Target hardware   : ClockworkPi uConsole CM4 (primary)
 Forward compat    : All Raspberry Pi ARM32 + ARM64 devices (DTBs + overlays
@@ -21,9 +24,9 @@ Forward compat    : All Raspberry Pi ARM32 + ARM64 devices (DTBs + overlays
                     archive — the firmware selects the correct one at boot)
 Architecture      : ARM64 (aarch64) — kernel8.img
 Kernel            : 6.12.85-nomodule (community build, rex / ClockworkPi forums)
-Base OS           : Debian Trixie (via ClockworkPi pi-gen fork)
-Build machine     : Raspberry Pi OS Trixie (native ARM64, e.g. the uConsole
-                    itself) — Docker path also documented below
+Base OS           : Debian Trixie (minimal, via debootstrap — no Pi OS)
+Build machine     : Any Debian/Ubuntu ARM64 machine (native build recommended)
+                    Cross-build from x86_64 also documented below
 
 
 --------------------------------------------------------------------------------
@@ -34,13 +37,15 @@ Install required tools on your build machine:
 
   sudo apt-get update
   sudo apt-get install -y \
-      git parted dosfstools e2fsprogs mtools coreutils \
-      coreutils quilt qemu-user-binfmt debootstrap zerofree \
-      libarchive-tools libcap2-bin grep rsync xz-utils file \
-      curl bc gpg pigz xxd arch-test bmap-tools kmod p7zip-full
+      debootstrap qemu-user-static binfmt-support \
+      parted dosfstools e2fsprogs kpartx \
+      coreutils rsync xz-utils file \
+      curl bc p7zip-full
 
-NOTE: If building natively on the uConsole / Pi OS ARM64, qemu-user-binfmt
-is still needed by pi-gen internally even on native ARM builds.
+NOTE: qemu-user-static and binfmt-support are required if building on an
+x86_64 host. On a native ARM64 build machine (e.g. the uConsole itself or
+a Pi 4/5) they are still good to have installed but are not strictly needed
+for the debootstrap step.
 
 
 --------------------------------------------------------------------------------
@@ -71,76 +76,10 @@ This produces the directory: 6.12.85-nomodule-kernel/
 
 
 --------------------------------------------------------------------------------
-SECTION 3 — CLONE pi-gen & CONFIGURE
+SECTION 3 — FILE CHECKLIST (before running the build script)
 --------------------------------------------------------------------------------
 
-Clone the ClockworkPi pi-gen fork:
-
-  git clone https://github.com/ak-rex/ClockworkPi-pi-gen.git
-  cd ClockworkPi-pi-gen
-
-Disable stages 3 and 4 — you only need a minimal shell (stages 0–2):
-
-  touch stage3/SKIP stage4/SKIP
-  touch stage3/SKIP_IMAGES stage4/SKIP_IMAGES
-
-Also remove the alternative stage2 variants that are not needed:
-
-  touch stage2-kde-testing/SKIP
-  touch stage2-retropie/SKIP
-
-Edit the pi-gen config file (repo root: config) so it reads exactly:
-
-  cat > config << 'EOF'
-  IMG_NAME="AstralixiOS-Pre-release"
-  RELEASE="trixie"
-  DEPLOY_COMPRESSION="none"
-  TARGET_HOSTNAME="astralixi-uconsole"
-  FIRST_USER_NAME="pi"
-  FIRST_USER_PASS="clockworkpi"
-  ENABLE_SSH=0
-  STAGE_LIST="stage0 stage1 stage2"
-  EOF
-
-Key changes from upstream defaults:
-  IMG_NAME        → "AstralixiOS-Pre-release" (release branding)
-  TARGET_HOSTNAME → "astralixi-uconsole"
-  STAGE_LIST      → stages 0–2 only (minimal shell, no desktop)
-
-
---------------------------------------------------------------------------------
-SECTION 4 — BUILD pi-gen BASE IMAGE
---------------------------------------------------------------------------------
-
-Run the pi-gen build (from inside the ClockworkPi-pi-gen directory):
-
-  sudo bash build.sh
-
-This will take 20–60 minutes depending on your hardware and internet speed.
-The output image will land in:
-
-  deploy/AstralixiOS-Pre-release-<date>-lite.img
-
-If the build fails part-way through, resume it with:
-
-  sudo CONTINUE=1 bash build.sh
-
-Docker alternative (for non-Debian build machines):
-
-  vi config          # edit as shown in Section 3
-  sudo bash build-docker.sh
-
-After the Docker build completes, remove the work container:
-
-  docker rm -v pigen_work
-
-
---------------------------------------------------------------------------------
-SECTION 5 — FILE CHECKLIST (before running the Astralixi layer script)
---------------------------------------------------------------------------------
-
-After pi-gen completes, gather the following into a single directory.
-Call it: astralixi-files/
+Gather the following into a single directory. Call it: astralixi-files/
 
   FROM THE EXTRACTED KERNEL ARCHIVE (6.12.85-nomodule-kernel/):
   ├── kernel8.img                       — ARM64 kernel (required)
@@ -176,14 +115,14 @@ Call it: astralixi-files/
          clockworkpi-custom-battery.dtbo,
          and all others from the archive)
 
-  FROM YOUR pi-gen OUTPUT (deploy/):
-  └── AstralixiOS-Pre-release-*.img     — base rootfs image from pi-gen
-
   YOUR OWN FILES:
   ├── astralixi-arm64                   — your compiled OS binary (Nuitka ARM64)
   └── CREDENTIALS.txt                   — optional: Username: / Password: format
                                           If omitted, credentials store is empty.
                                           Add later: nano /etc/astralixi/.credentials
+
+NOTE: There is no pi-gen image in this list. The rootfs is built by the
+build script directly using debootstrap. You do not need to run pi-gen.
 
 IMPORTANT — all DTBs and the complete overlays/ folder come from the
 6.12.85-nomodule-kernel.7z archive provided by rex. Do NOT use DTBs or
@@ -192,15 +131,16 @@ requires its matching DTBs.
 
 
 --------------------------------------------------------------------------------
-SECTION 6 — BOOT CONFIGURATION (config.txt)
+SECTION 4 — BOOT CONFIGURATION (config.txt)
 --------------------------------------------------------------------------------
 
-The config.txt below is the corrected version incorporating community feedback.
-It activates the uConsole hardware overlay (clockworkpi-uconsole) which was
-missing from the previous build, causing the black screen.
+The config.txt below activates the uConsole hardware overlay
+(clockworkpi-uconsole) which is required for the display, keyboard, and
+hardware bus routing. Without it the screen stays black even if the kernel
+boots correctly.
 
 This config.txt is placed in astralixi-files/ and the build script writes it
-to the boot partition, REPLACING the pi-gen default:
+to the boot partition:
 
   cat > ~/astralixi-files/config.txt << 'EOF'
   # Astralixi OS Pre-release — uConsole CM4 boot config
@@ -230,23 +170,28 @@ to the boot partition, REPLACING the pi-gen default:
   dtparam=act_led_activelow=off
   EOF
 
-NOTE: The critical addition vs the previous build is:
-    dtoverlay=clockworkpi-uconsole
-This overlay activates the uConsole's display, keyboard, and hardware bus
-routing. Without it the screen stays black even if the kernel boots.
-
 
 --------------------------------------------------------------------------------
-SECTION 7 — BUILD SCRIPT (Astralixi layer)
+SECTION 5 — BUILD SCRIPT
 --------------------------------------------------------------------------------
 
-This script takes the pi-gen base image, replaces the boot partition with the
-community kernel + correct config.txt, and injects the Astralixi application
-layer into the rootfs.
+This script:
+  1. Creates a fresh blank .img with two partitions (FAT32 boot + ext4 rootfs)
+  2. Builds a minimal Debian Trixie ARM64 rootfs using debootstrap
+  3. Installs the community kernel + DTBs + overlays + config.txt into boot
+  4. Injects the Astralixi binary and configures systemd so the binary is the
+     only thing that runs on tty1 — no login shell, no Pi OS, no fallback shell
+  5. If the binary exits for any reason, systemd restarts it immediately
 
 Save as: build_astralixi.sh
 Make executable: chmod +x build_astralixi.sh
 Run as root: sudo bash build_astralixi.sh
+
+Cross-build note (x86_64 host):
+  The debootstrap step uses qemu-user-static to run ARM64 binaries. Confirm
+  binfmt is active before running:
+    update-binfmts --enable qemu-aarch64
+  On a native ARM64 build machine this step is not needed.
 
 ================== BEGIN build_astralixi.sh ====================================
 
@@ -254,24 +199,19 @@ Run as root: sudo bash build_astralixi.sh
 set -e
 
 # ── Configuration ────────────────────────────────────────────────────────────
-FILES_DIR="./astralixi-files"        # directory with all gathered files
-PIGEN_IMG=$(ls "$FILES_DIR"/AstralixiOS-Pre-release-*.img 2>/dev/null | head -1)
+FILES_DIR="./astralixi-files"           # directory with all gathered files
 OUTPUT_IMG="./astralixi-uconsole.img"
 KERNEL_DIR="./6.12.85-nomodule-kernel"  # extracted from 7z archive
 OS_BINARY="astralixi-arm64"             # compiled binary in FILES_DIR
 CREDENTIALS="CREDENTIALS.txt"           # optional credentials file
+IMG_SIZE_MB=2048                        # base image size — expand on first boot
+BOOT_SIZE_MB=256                        # FAT32 boot partition size
 # ─────────────────────────────────────────────────────────────────────────────
 
 echo "=== Astralixi OS Pre-release Image Builder ==="
 echo ""
 
 # ── Validate inputs ──────────────────────────────────────────────────────────
-if [ -z "$PIGEN_IMG" ] || [ ! -f "$PIGEN_IMG" ]; then
-    echo "ERROR: No AstralixiOS-Pre-release-*.img found in $FILES_DIR"
-    echo "       Run pi-gen first (Section 4) and copy the output here."
-    exit 1
-fi
-
 if [ ! -d "$KERNEL_DIR" ]; then
     echo "ERROR: Kernel directory not found: $KERNEL_DIR"
     echo "       Extract 6_12_85-nomodule-kernel.7z first: 7z x 6_12_85-nomodule-kernel.7z"
@@ -291,7 +231,7 @@ if [ ! -d "$KERNEL_DIR/overlays" ]; then
 fi
 
 if [ ! -f "$FILES_DIR/config.txt" ]; then
-    echo "ERROR: Missing config.txt in $FILES_DIR (see Section 6)"
+    echo "ERROR: Missing config.txt in $FILES_DIR (see Section 4)"
     exit 1
 fi
 
@@ -309,66 +249,96 @@ else
 fi
 
 echo "[OK] All required input files present"
-echo "     Base image : $PIGEN_IMG"
 echo ""
 
-# ── Copy pi-gen image as working base ────────────────────────────────────────
-echo "[1/9] Copying pi-gen base image..."
-cp "$PIGEN_IMG" "$OUTPUT_IMG"
-echo "      $OUTPUT_IMG"
+# ── Create blank image ───────────────────────────────────────────────────────
+echo "[1/10] Creating blank image (${IMG_SIZE_MB}MB)..."
+dd if=/dev/zero of="$OUTPUT_IMG" bs=1M count="$IMG_SIZE_MB" status=none
+echo "       $OUTPUT_IMG created"
+
+# ── Partition the image ──────────────────────────────────────────────────────
+echo "[2/10] Partitioning image (p1: FAT32 boot ${BOOT_SIZE_MB}MB, p2: ext4 rootfs)..."
+parted -s "$OUTPUT_IMG" mklabel msdos
+parted -s "$OUTPUT_IMG" mkpart primary fat32 1MiB "${BOOT_SIZE_MB}MiB"
+parted -s "$OUTPUT_IMG" mkpart primary ext4 "${BOOT_SIZE_MB}MiB" 100%
+parted -s "$OUTPUT_IMG" set 1 boot on
 
 # ── Mount the image ──────────────────────────────────────────────────────────
-echo "[2/9] Mounting image partitions..."
+echo "[3/10] Mounting image partitions..."
 LOOP=$(losetup -f --show -P "$OUTPUT_IMG")
 sleep 1
 partprobe "$LOOP" 2>/dev/null || true
 sleep 1
+
+# Format partitions
+mkfs.vfat -F32 -n "boot" "${LOOP}p1" > /dev/null
+mkfs.ext4 -L "rootfs" -q "${LOOP}p2"
 
 BOOT_MNT=$(mktemp -d)
 ROOT_MNT=$(mktemp -d)
 mount "${LOOP}p1" "$BOOT_MNT"
 mount "${LOOP}p2" "$ROOT_MNT"
 
-# ── Replace boot partition with community kernel ──────────────────────────────
-echo "[3/9] Installing community kernel 6.12.85-nomodule into boot partition..."
+# ── Build minimal Debian Trixie rootfs with debootstrap ─────────────────────
+echo "[4/10] Building minimal Debian Trixie ARM64 rootfs (this takes a while)..."
+debootstrap \
+    --arch=arm64 \
+    --variant=minbase \
+    --include=systemd,systemd-sysv,udev,kmod,e2fsprogs,util-linux,\
+mount,procps,sed,grep,coreutils,bash,init \
+    trixie \
+    "$ROOT_MNT" \
+    http://deb.debian.org/debian
 
-# Clear existing kernel/DTB/overlay files
-rm -f  "$BOOT_MNT"/kernel*.img
-rm -f  "$BOOT_MNT"/*.dtb
-rm -rf "$BOOT_MNT"/overlays
+echo "       Rootfs built"
 
-# Copy entire kernel archive contents into boot partition
-cp "$KERNEL_DIR/kernel8.img"   "$BOOT_MNT/"
-cp "$KERNEL_DIR"/*.dtb          "$BOOT_MNT/"
-cp -r "$KERNEL_DIR/overlays"   "$BOOT_MNT/"
+# ── Basic system configuration ───────────────────────────────────────────────
+echo "[5/10] Configuring system..."
 
-echo "      Kernel + all DTBs + overlays installed"
+# Hostname
+echo "astralixi-uconsole" > "$ROOT_MNT/etc/hostname"
 
-# ── Install corrected config.txt ─────────────────────────────────────────────
-echo "[4/9] Installing corrected config.txt (with uConsole hardware overlay)..."
-cp "$FILES_DIR/config.txt" "$BOOT_MNT/config.txt"
-echo "      config.txt installed (dtoverlay=clockworkpi-uconsole active)"
+# Hosts
+cat > "$ROOT_MNT/etc/hosts" << 'EOF'
+127.0.0.1   localhost
+127.0.1.1   astralixi-uconsole
+EOF
 
-# ── Update cmdline.txt with correct PARTUUID ────────────────────────────────
-echo "[5/9] Updating cmdline.txt..."
+# fstab — determined from actual PARTUUID below, written after PARTUUID is known
 DISK_ID=$(python3 -c "
 import struct
 with open('$OUTPUT_IMG','rb') as f:
     f.seek(440); v=struct.unpack('<I',f.read(4))[0]
 print(f'{v:08x}')
 ")
+P1_PARTUUID="${DISK_ID}-01"
 P2_PARTUUID="${DISK_ID}-02"
-printf 'console=serial0,115200 console=tty1 root=PARTUUID=%s rootfstype=ext4 fsck.repair=yes rootwait quiet' \
-    "$P2_PARTUUID" > "$BOOT_MNT/cmdline.txt"
-echo "      rootfs PARTUUID: ${P2_PARTUUID}"
 
-# ── Inject Astralixi application layer into rootfs ───────────────────────────
-echo "[6/9] Injecting Astralixi application layer into rootfs..."
+cat > "$ROOT_MNT/etc/fstab" << EOF
+PARTUUID=${P2_PARTUUID}  /           ext4    defaults,noatime  0  1
+PARTUUID=${P1_PARTUUID}  /boot       vfat    defaults          0  2
+EOF
+
+# Locale — minimal, avoids locale warnings in the binary's curses output
+echo "LANG=C.UTF-8" > "$ROOT_MNT/etc/locale.conf"
+
+# /etc/os-release — Astralixi branding
+cat > "$ROOT_MNT/etc/os-release" << 'EOF'
+NAME="Astralixi OS"
+VERSION="Pre-release"
+ID=astralixi
+ID_LIKE=debian
+PRETTY_NAME="Astralixi OS Pre-release (uConsole CM4)"
+VERSION_ID="pre-release"
+HOME_URL="https://astralixi.com"
+EOF
+
+# ── Install Astralixi application layer ──────────────────────────────────────
+echo "[6/10] Injecting Astralixi application layer..."
 
 mkdir -p "$ROOT_MNT/opt/astralixi"
 mkdir -p "$ROOT_MNT/etc/astralixi"
 mkdir -p "$ROOT_MNT/mnt/storage"
-mkdir -p "$ROOT_MNT/etc/systemd/system/multi-user.target.wants"
 
 # OS binary
 cp "$FILES_DIR/$OS_BINARY" "$ROOT_MNT/opt/astralixi/astralixi"
@@ -422,29 +392,30 @@ if __name__ == '__main__':
 PYEOF
 chmod +x "$ROOT_MNT/opt/astralixi/read_credentials.py"
 
-# /etc/os-release — Astralixi branding
-cat > "$ROOT_MNT/etc/os-release" << 'EOF'
-NAME="Astralixi OS"
-VERSION="Pre-release"
-ID=astralixi
-ID_LIKE=debian
-PRETTY_NAME="Astralixi OS Pre-release (uConsole CM4)"
-VERSION_ID="pre-release"
-HOME_URL="https://astralixi.com"
-EOF
+# ── Configure systemd to run Astralixi as the only thing on tty1 ─────────────
+echo "[7/10] Configuring systemd (Astralixi replaces login shell on tty1)..."
 
-# systemd service
+# Main Astralixi service — runs the binary directly on tty1
+# StandardInput/Output=tty gives the binary a real TTY (required for curses)
+# Restart=always means it restarts immediately on exit — no shell fallback
 cat > "$ROOT_MNT/etc/systemd/system/astralixi.service" << 'EOF'
 [Unit]
-Description=Astralixi OS Main Service
-After=network.target local-fs.target
+Description=Astralixi OS
+After=local-fs.target systemd-udevd.service
+DefaultDependencies=no
 
 [Service]
 Type=simple
 User=root
 ExecStart=/opt/astralixi/astralixi
-Restart=on-failure
-RestartSec=5s
+StandardInput=tty
+StandardOutput=tty
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+Restart=always
+RestartSec=1s
+Environment=TERM=linux
 Environment=CREDENTIALS_FILE=/etc/astralixi/.credentials
 WorkingDirectory=/opt/astralixi
 
@@ -452,11 +423,30 @@ WorkingDirectory=/opt/astralixi
 WantedBy=multi-user.target
 EOF
 
+# Override getty@tty1 so it does NOT start — Astralixi owns tty1 exclusively
+mkdir -p "$ROOT_MNT/etc/systemd/system/getty@tty1.service.d"
+cat > "$ROOT_MNT/etc/systemd/system/getty@tty1.service.d/override.conf" << 'EOF'
+[Unit]
+# Astralixi OS owns tty1. Do not start getty here.
+ConditionPathExists=/nonexistent
+EOF
+
+# Enable Astralixi service
+mkdir -p "$ROOT_MNT/etc/systemd/system/multi-user.target.wants"
 ln -sf /etc/systemd/system/astralixi.service \
        "$ROOT_MNT/etc/systemd/system/multi-user.target.wants/astralixi.service"
 
+# Disable getty on tty2-tty6 as well — this is a single-purpose OS
+for i in 2 3 4 5 6; do
+    mkdir -p "$ROOT_MNT/etc/systemd/system/getty@tty${i}.service.d"
+    cat > "$ROOT_MNT/etc/systemd/system/getty@tty${i}.service.d/override.conf" << 'EOF'
+[Unit]
+ConditionPathExists=/nonexistent
+EOF
+done
+
 # ── First-boot storage expander ──────────────────────────────────────────────
-echo "[7/9] Installing first-boot storage expander..."
+echo "[8/10] Installing first-boot storage expander..."
 
 cat > "$ROOT_MNT/usr/local/bin/expand-storage.sh" << 'EXPANDEOF'
 #!/bin/sh
@@ -520,8 +510,23 @@ EOF
 ln -sf /etc/systemd/system/expand-storage.service \
        "$ROOT_MNT/etc/systemd/system/multi-user.target.wants/expand-storage.service"
 
+# ── Install kernel into boot partition ───────────────────────────────────────
+echo "[9/10] Installing community kernel 6.12.85-nomodule into boot partition..."
+
+cp "$KERNEL_DIR/kernel8.img"  "$BOOT_MNT/"
+cp "$KERNEL_DIR"/*.dtb         "$BOOT_MNT/"
+cp -r "$KERNEL_DIR/overlays"  "$BOOT_MNT/"
+cp "$FILES_DIR/config.txt"    "$BOOT_MNT/config.txt"
+
+# cmdline.txt — points rootfs at p2 by PARTUUID
+printf 'console=serial0,115200 console=tty1 root=PARTUUID=%s rootfstype=ext4 fsck.repair=yes rootwait quiet' \
+    "$P2_PARTUUID" > "$BOOT_MNT/cmdline.txt"
+
+echo "       Kernel + all DTBs + overlays installed"
+echo "       rootfs PARTUUID: ${P2_PARTUUID}"
+
 # ── Sync and unmount ─────────────────────────────────────────────────────────
-echo "[8/9] Syncing and unmounting..."
+echo "[10/10] Syncing and unmounting..."
 sync
 umount "$BOOT_MNT"
 umount "$ROOT_MNT"
@@ -530,7 +535,8 @@ rmdir  "$ROOT_MNT"
 losetup -d "$LOOP"
 
 # ── Done ─────────────────────────────────────────────────────────────────────
-echo "[9/9] Build complete."
+echo ""
+echo "=== Build complete ==="
 echo ""
 echo "  Output : $OUTPUT_IMG"
 echo "  Size   : $(du -sh "$OUTPUT_IMG" | cut -f1)"
@@ -547,44 +553,42 @@ echo ""
 
 
 --------------------------------------------------------------------------------
-SECTION 8 — RUNNING THE BUILD (summary)
+SECTION 6 — RUNNING THE BUILD (summary)
 --------------------------------------------------------------------------------
 
   Step 1 — Extract the kernel archive (once):
     7z x 6_12_85-nomodule-kernel.7z
 
-  Step 2 — Clone and configure pi-gen:
-    git clone https://github.com/ak-rex/ClockworkPi-pi-gen.git
-    cd ClockworkPi-pi-gen
-    touch stage3/SKIP stage4/SKIP stage3/SKIP_IMAGES stage4/SKIP_IMAGES
-    touch stage2-kde-testing/SKIP stage2-retropie/SKIP
-    # Edit config as shown in Section 3
-    sudo bash build.sh
-
-  Step 3 — Gather files into astralixi-files/:
-    cp deploy/AstralixiOS-Pre-release-*.img astralixi-files/
-    # Create config.txt as shown in Section 6
+  Step 2 — Gather files into astralixi-files/:
+    # Create config.txt as shown in Section 4
     # Copy your astralixi-arm64 binary and optional CREDENTIALS.txt
 
-  Step 4 — Run the Astralixi layer script:
+  Step 3 — Run the build script:
     sudo bash build_astralixi.sh
 
   Expected output:
     === Astralixi OS Pre-release Image Builder ===
     [OK] All required input files present
-    [1/9] Copying pi-gen base image...
-    [2/9] Mounting image partitions...
-    [3/9] Installing community kernel 6.12.85-nomodule into boot partition...
-    [4/9] Installing corrected config.txt (with uConsole hardware overlay)...
-    [5/9] Updating cmdline.txt...
-    [6/9] Injecting Astralixi application layer into rootfs...
-    [7/9] Installing first-boot storage expander...
-    [8/9] Syncing and unmounting...
-    [9/9] Build complete.
+    [1/10] Creating blank image (2048MB)...
+    [2/10] Partitioning image (p1: FAT32 boot 256MB, p2: ext4 rootfs)...
+    [3/10] Mounting image partitions...
+    [4/10] Building minimal Debian Trixie ARM64 rootfs (this takes a while)...
+    [5/10] Configuring system...
+    [6/10] Injecting Astralixi application layer...
+    [7/10] Configuring systemd (Astralixi replaces login shell on tty1)...
+    [8/10] Installing first-boot storage expander...
+    [9/10] Installing community kernel 6.12.85-nomodule into boot partition...
+    [10/10] Syncing and unmounting...
+
+    === Build complete ===
+
+NOTE: Step 4 (debootstrap) downloads packages from the Debian mirrors and
+will take several minutes depending on your internet connection. This is
+normal. On a native ARM64 machine it is noticeably faster than on x86_64.
 
 
 --------------------------------------------------------------------------------
-SECTION 9 — FIRST BOOT BEHAVIOUR
+SECTION 7 — FIRST BOOT BEHAVIOUR
 --------------------------------------------------------------------------------
 
 On first boot after flashing:
@@ -592,16 +596,19 @@ On first boot after flashing:
   1. Pi firmware loads kernel8.img from p1 (FAT32)
      → Firmware detects board revision fuses, selects correct DTB automatically
   2. clockworkpi-uconsole overlay activates uConsole display + hardware
-  3. Kernel mounts p2 (ext4) as root (Trixie minimal shell from pi-gen)
-  4. systemd starts astralixi.service → /opt/astralixi/astralixi
-  5. systemd starts expand-storage.service (once only):
+  3. Kernel mounts p2 (ext4) as root (minimal Debian Trixie rootfs)
+  4. systemd starts — getty on all TTYs is disabled
+  5. astralixi.service starts → /opt/astralixi/astralixi runs on tty1
+     → If the binary exits for any reason, systemd restarts it after 1 second
+     → There is no login shell to fall back to
+  6. expand-storage.service runs once:
        - Creates p3 from all remaining unallocated SD space
        - Formats ext4, mounts at /mnt/storage
        - Disables itself permanently
 
 
 --------------------------------------------------------------------------------
-SECTION 10 — CREDENTIAL ACCESS FROM PYTHON
+SECTION 8 — CREDENTIAL ACCESS FROM PYTHON
 --------------------------------------------------------------------------------
 
 Stored at /etc/astralixi/.credentials  (chmod 600, root-only, dot-hidden)
@@ -629,7 +636,7 @@ Symlinked at /opt/astralixi/.credentials
 
 
 --------------------------------------------------------------------------------
-SECTION 11 — FLASHING
+SECTION 9 — FLASHING
 --------------------------------------------------------------------------------
 
 Linux / macOS (dd):
@@ -649,35 +656,40 @@ Verify boot partition after flashing (FAT32, readable on any OS):
 
 
 --------------------------------------------------------------------------------
-SECTION 12 — TROUBLESHOOTING
+SECTION 10 — TROUBLESHOOTING
 --------------------------------------------------------------------------------
 
-Black screen (no display output):
+Astralixi binary not starting / black screen after boot text:
+  → Connect via serial console (115200 baud on UART pins) and run:
+      systemctl status astralixi.service
+      journalctl -u astralixi.service
+  → The binary works correctly when run in a terminal on the same hardware.
+    If it fails under systemd, the most likely cause is a missing TERM or
+    TTY environment variable. Confirm the service has TERM=linux set (it
+    does by default in this build) and that TTYPath=/dev/tty1 is present.
+  → Check: /opt/astralixi/astralixi exists and is executable (chmod +x)
+
+Black screen (no display output at all, no boot text):
   → Confirm overlays/ is present and non-empty in the boot partition
   → Confirm config.txt contains: dtoverlay=clockworkpi-uconsole
-  → This was the primary issue in the previous build — the uConsole hardware
-    overlay was missing. It MUST be present for the display to activate.
   → Serial console fallback: connect at 115200 baud on UART pins to diagnose
 
-Screen shows text but locks up / no shell:
-  → Confirm pi-gen ran through stage2 fully (check deploy/ for output image)
-  → Confirm stage3/SKIP and stage4/SKIP are in place before building
-  → The shell is provided by the pi-gen stage2 Trixie rootfs; if stage2
-    did not complete, there will be no login shell
+debootstrap fails during build:
+  → Confirm your build machine has internet access and can reach deb.debian.org
+  → On x86_64: confirm binfmt is active: update-binfmts --enable qemu-aarch64
+  → If debootstrap errors mid-run, unmount and clean up before retrying:
+      sudo umount /tmp/tmp.*/  (match the temp mount dirs from the failed run)
+      sudo losetup -D           (detach all loop devices)
+      rm astralixi-uconsole.img
+    Then run the script again from scratch.
 
 Wrong kernel / DTB mismatch:
   → Always use the DTBs and overlays from 6_12_85-nomodule-kernel.7z
   → Never mix DTBs from /boot/firmware/ with this kernel — they must match
-  → All DTBs (Pi 2 through Pi 5 / CM5) are already in the archive
 
 Storage partition not appearing:
   → Check /var/log/expand-storage.log on the device
   → Run manually: sudo bash /usr/local/bin/expand-storage.sh
-
-pi-gen build fails:
-  → Resume with: sudo CONTINUE=1 bash build.sh
-  → Ensure build path has no spaces (debootstrap requirement)
-  → On non-Debian host: use the Docker path (build-docker.sh)
 
 ================================================================================
   END OF BUILD GUIDE — Astralixi OS Pre-release
