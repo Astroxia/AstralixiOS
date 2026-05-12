@@ -14,6 +14,7 @@ Astrox Cyberspace (preffered contact): @astr0x
 Project Repository: https://github.com/Astroxia/AstralixiOS
 Astrox Youtube: @astroxia
 Astrox Reddit: @astrox_yt
+
 ---
 
 ## ⚠️ End of Life Notice
