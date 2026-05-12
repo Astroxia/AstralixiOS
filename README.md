@@ -10,10 +10,10 @@ Astralixi OS is a lightweight TUI operating system user-space designed for embed
 Astralixi OS is released under the GNU General Public License with allowed changes. See the LICENSE file for more details.
 
 ## Contact
-- Astrox Cyberspace (preffered contact): @astr0x
-- Project Repository: https://github.com/Astroxia/AstralixiOS
-- Astrox Youtube: @astroxia
-- Astrox Reddit: @astrox_yt
+- **Astrox Cyberspace (preffered contact):** @astr0x
+- **Project Repository:** https://github.com/Astroxia/AstralixiOS
+- **Astrox Youtube:** @astroxia
+- **Astrox Reddit:** @astrox_yt
 
 ---
 
