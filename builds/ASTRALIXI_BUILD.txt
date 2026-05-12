@@ -15,8 +15,19 @@ produce the rootfs. That approach is removed. pi-gen builds a full
 Raspberry Pi OS Lite environment — when the Astralixi binary failed to start,
 the system fell back to a Pi OS shell. The new approach builds a minimal
 Debian Trixie rootfs from scratch using debootstrap, with no Pi OS layer at
-all. The Astralixi binary is the only thing that runs on tty1. There is no
-login shell to fall back to.
+all.
+
+The Astralixi binary is launched by configuring getty on tty1 to autologin a
+dedicated user immediately on boot, with that user's shell profile exec-ing
+the binary the moment a login session is fully established. This ensures the
+binary has a proper TTY and a complete userspace session — the same conditions
+under which it already works correctly when run in a terminal. If the binary
+exits, the shell profile loops and relaunches it. There is no login prompt, no
+shell, and no Pi OS anywhere.
+
+The kernel and systemd boot sequence is fully silenced — kernel messages,
+udev output, systemd status lines, and the TTY cursor are all suppressed so
+the user sees nothing before Astralixi appears.
 
 Target hardware   : ClockworkPi uConsole CM4 (primary)
 Forward compat    : All Raspberry Pi ARM32 + ARM64 devices (DTBs + overlays
@@ -179,9 +190,14 @@ This script:
   1. Creates a fresh blank .img with two partitions (FAT32 boot + ext4 rootfs)
   2. Builds a minimal Debian Trixie ARM64 rootfs using debootstrap
   3. Installs the community kernel + DTBs + overlays + config.txt into boot
-  4. Injects the Astralixi binary and configures systemd so the binary is the
-     only thing that runs on tty1 — no login shell, no Pi OS, no fallback shell
-  5. If the binary exits for any reason, systemd restarts it immediately
+  4. Silences the entire boot sequence — kernel messages, udev, systemd status
+     lines, and the TTY cursor are all suppressed
+  5. Creates a dedicated astralixi user and configures getty on tty1 to
+     autologin that user immediately on boot, with no login prompt shown
+  6. Writes a shell profile that clears the screen and exec-launches the
+     Astralixi binary the moment the login session is ready — if the binary
+     exits, the profile loops and relaunches it automatically
+  7. Disables getty on all other TTYs so there is no shell accessible anywhere
 
 Save as: build_astralixi.sh
 Make executable: chmod +x build_astralixi.sh
@@ -392,57 +408,80 @@ if __name__ == '__main__':
 PYEOF
 chmod +x "$ROOT_MNT/opt/astralixi/read_credentials.py"
 
-# ── Configure systemd to run Astralixi as the only thing on tty1 ─────────────
-echo "[7/10] Configuring systemd (Astralixi replaces login shell on tty1)..."
+# ── Create astralixi user and configure autologin + shell profile launch ──────
+echo "[7/10] Configuring autologin and shell profile launch..."
 
-# Main Astralixi service — runs the binary directly on tty1
-# StandardInput/Output=tty gives the binary a real TTY (required for curses)
-# Restart=always means it restarts immediately on exit — no shell fallback
-cat > "$ROOT_MNT/etc/systemd/system/astralixi.service" << 'EOF'
-[Unit]
-Description=Astralixi OS
-After=local-fs.target systemd-udevd.service
-DefaultDependencies=no
+# Create a dedicated astralixi user — no password, no sudo, no login shell
+# (bash is used only to run .bash_profile then hand off to the binary)
+chroot "$ROOT_MNT" useradd \
+    --create-home \
+    --shell /bin/bash \
+    --comment "Astralixi OS" \
+    astralixi
 
-[Service]
-Type=simple
-User=root
-ExecStart=/opt/astralixi/astralixi
-StandardInput=tty
-StandardOutput=tty
-TTYPath=/dev/tty1
-TTYReset=yes
-TTYVHangup=yes
-Restart=always
-RestartSec=1s
-Environment=TERM=linux
-Environment=CREDENTIALS_FILE=/etc/astralixi/.credentials
-WorkingDirectory=/opt/astralixi
+# Lock the password — autologin only, no password-based login possible
+chroot "$ROOT_MNT" passwd -l astralixi > /dev/null
 
-[Install]
-WantedBy=multi-user.target
+# Give the astralixi user read access to its own binary and credentials
+chown root:astralixi "$ROOT_MNT/opt/astralixi/astralixi"
+chmod 750            "$ROOT_MNT/opt/astralixi/astralixi"
+chown root:astralixi "$ROOT_MNT/etc/astralixi/.credentials"
+chmod 640            "$ROOT_MNT/etc/astralixi/.credentials"
+
+# Shell profile — this is what runs when getty autologs in the astralixi user.
+# It:
+#   1. Hides the cursor (stty + tput) so nothing shows during any brief init
+#   2. Clears the screen completely before the binary starts
+#   3. exec-loops the binary — if it exits, it relaunches immediately
+#      (exec replaces bash with the binary; on exit bash is gone so the
+#       profile is re-sourced by the next getty autologin cycle)
+cat > "$ROOT_MNT/home/astralixi/.bash_profile" << 'EOF'
+# Astralixi OS — auto-launch profile
+# Runs as the astralixi user on tty1 via getty autologin.
+
+export TERM=linux
+export CREDENTIALS_FILE=/etc/astralixi/.credentials
+export HOME=/home/astralixi
+
+# Suppress cursor visibility
+tput civis 2>/dev/null || true
+
+# Clear the screen — no boot artifacts visible to the user
+clear
+
+# Launch the Astralixi binary.
+# Loop so that if the binary ever exits cleanly, it restarts immediately.
+# exec on first run replaces this shell with the binary (cleaner process tree).
+_first=1
+while true; do
+    if [ "$_first" = "1" ]; then
+        _first=0
+        exec /opt/astralixi/astralixi
+    else
+        clear
+        /opt/astralixi/astralixi
+    fi
+done
 EOF
+chown astralixi:astralixi "$ROOT_MNT/home/astralixi/.bash_profile"
+chmod 644 "$ROOT_MNT/home/astralixi/.bash_profile"
 
-# Override getty@tty1 so it does NOT start — Astralixi owns tty1 exclusively
+# Configure getty@tty1 to autologin the astralixi user immediately —
+# no login prompt is shown, the session starts and .bash_profile runs at once
 mkdir -p "$ROOT_MNT/etc/systemd/system/getty@tty1.service.d"
-cat > "$ROOT_MNT/etc/systemd/system/getty@tty1.service.d/override.conf" << 'EOF'
-[Unit]
-# Astralixi OS owns tty1. Do not start getty here.
-ConditionPathExists=/nonexistent
+cat > "$ROOT_MNT/etc/systemd/system/getty@tty1.service.d/autologin.conf" << 'EOF'
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin astralixi --noclear %I $TERM
 EOF
 
-# Enable Astralixi service
-mkdir -p "$ROOT_MNT/etc/systemd/system/multi-user.target.wants"
-ln -sf /etc/systemd/system/astralixi.service \
-       "$ROOT_MNT/etc/systemd/system/multi-user.target.wants/astralixi.service"
-
-# Disable getty on tty2-tty6 as well — this is a single-purpose OS
+# Disable getty on tty2-tty6 — single-purpose OS, no shell access elsewhere
 for i in 2 3 4 5 6; do
     mkdir -p "$ROOT_MNT/etc/systemd/system/getty@tty${i}.service.d"
-    cat > "$ROOT_MNT/etc/systemd/system/getty@tty${i}.service.d/override.conf" << 'EOF'
+    cat > "$ROOT_MNT/etc/systemd/system/getty@tty${i}.service.d/override.conf" << 'EOFINNER'
 [Unit]
 ConditionPathExists=/nonexistent
-EOF
+EOFINNER
 done
 
 # ── First-boot storage expander ──────────────────────────────────────────────
@@ -518,8 +557,9 @@ cp "$KERNEL_DIR"/*.dtb         "$BOOT_MNT/"
 cp -r "$KERNEL_DIR/overlays"  "$BOOT_MNT/"
 cp "$FILES_DIR/config.txt"    "$BOOT_MNT/config.txt"
 
-# cmdline.txt — points rootfs at p2 by PARTUUID
-printf 'console=serial0,115200 console=tty1 root=PARTUUID=%s rootfstype=ext4 fsck.repair=yes rootwait quiet' \
+# cmdline.txt — silent boot: suppresses kernel messages, udev noise,
+# systemd status lines, and the TTY cursor before Astralixi appears
+printf 'console=serial0,115200 console=tty1 root=PARTUUID=%s rootfstype=ext4 fsck.repair=yes rootwait quiet loglevel=0 rd.systemd.show_status=0 rd.udev.log_level=0 vt.global_cursor_default=0' \
     "$P2_PARTUUID" > "$BOOT_MNT/cmdline.txt"
 
 echo "       Kernel + all DTBs + overlays installed"
@@ -575,7 +615,7 @@ SECTION 6 — RUNNING THE BUILD (summary)
     [4/10] Building minimal Debian Trixie ARM64 rootfs (this takes a while)...
     [5/10] Configuring system...
     [6/10] Injecting Astralixi application layer...
-    [7/10] Configuring systemd (Astralixi replaces login shell on tty1)...
+    [7/10] Configuring autologin and shell profile launch...
     [8/10] Installing first-boot storage expander...
     [9/10] Installing community kernel 6.12.85-nomodule into boot partition...
     [10/10] Syncing and unmounting...
@@ -596,12 +636,20 @@ On first boot after flashing:
   1. Pi firmware loads kernel8.img from p1 (FAT32)
      → Firmware detects board revision fuses, selects correct DTB automatically
   2. clockworkpi-uconsole overlay activates uConsole display + hardware
-  3. Kernel mounts p2 (ext4) as root (minimal Debian Trixie rootfs)
-  4. systemd starts — getty on all TTYs is disabled
-  5. astralixi.service starts → /opt/astralixi/astralixi runs on tty1
-     → If the binary exits for any reason, systemd restarts it after 1 second
-     → There is no login shell to fall back to
-  6. expand-storage.service runs once:
+  3. Kernel boots silently — all kernel messages, udev output, and systemd
+     status lines are suppressed via cmdline.txt parameters
+  4. Kernel mounts p2 (ext4) as root (minimal Debian Trixie rootfs — no Pi OS)
+  5. systemd reaches multi-user.target and starts getty@tty1
+  6. Getty immediately autologs in the astralixi user — no login prompt shown
+  7. bash sources /home/astralixi/.bash_profile:
+       - Cursor is hidden
+       - Screen is cleared
+       - exec launches /opt/astralixi/astralixi
+     The binary now has a full, properly initialised TTY and login session —
+     the same environment it runs in when launched from a terminal
+  8. If the binary exits for any reason, .bash_profile clears the screen and
+     relaunches it in a loop — there is no shell prompt ever shown
+  9. expand-storage.service runs once in the background:
        - Creates p3 from all remaining unallocated SD space
        - Formats ext4, mounts at /mnt/storage
        - Disables itself permanently
@@ -611,7 +659,8 @@ On first boot after flashing:
 SECTION 8 — CREDENTIAL ACCESS FROM PYTHON
 --------------------------------------------------------------------------------
 
-Stored at /etc/astralixi/.credentials  (chmod 600, root-only, dot-hidden)
+Stored at /etc/astralixi/.credentials  (chmod 640, root:astralixi — readable
+by the astralixi user only, not world-readable)
 Symlinked at /opt/astralixi/.credentials
 
     # Option A — bundled helper
@@ -659,15 +708,19 @@ Verify boot partition after flashing (FAT32, readable on any OS):
 SECTION 10 — TROUBLESHOOTING
 --------------------------------------------------------------------------------
 
-Astralixi binary not starting / black screen after boot text:
-  → Connect via serial console (115200 baud on UART pins) and run:
-      systemctl status astralixi.service
-      journalctl -u astralixi.service
-  → The binary works correctly when run in a terminal on the same hardware.
-    If it fails under systemd, the most likely cause is a missing TERM or
-    TTY environment variable. Confirm the service has TERM=linux set (it
-    does by default in this build) and that TTYPath=/dev/tty1 is present.
-  → Check: /opt/astralixi/astralixi exists and is executable (chmod +x)
+Astralixi binary not starting / screen stays blank after boot:
+  → Connect via serial console (115200 baud on UART pins) and check:
+      systemctl status getty@tty1.service
+      journalctl -u getty@tty1.service
+  → Confirm the astralixi user exists: id astralixi
+  → Confirm the autologin drop-in is in place:
+      cat /etc/systemd/system/getty@tty1.service.d/autologin.conf
+  → Confirm the binary is executable by the astralixi user:
+      ls -la /opt/astralixi/astralixi
+  → Manually test the binary as the astralixi user to confirm it runs:
+      su -l astralixi -c /opt/astralixi/astralixi
+  → Confirm .bash_profile is present and owned correctly:
+      ls -la /home/astralixi/.bash_profile
 
 Black screen (no display output at all, no boot text):
   → Confirm overlays/ is present and non-empty in the boot partition
