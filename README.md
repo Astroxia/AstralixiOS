@@ -7,7 +7,7 @@ Astralixi OS is a lightweight TUI operating system user-space designed for embed
 - Space & Tech Focused: Tailored for space enthusiasts, while remaining approachable for the technically curious.
 
 ## License
-The Astralixi OS kernel is released under the GNU General Public License. All other components of the OS are proprietary. See the LICENSE file for more details.
+Astralixi OS is released under the GNU General Public License with allowed changes. See the LICENSE file for more details.
 
 ## Contact
 Astrox Cyberspace (preffered contact): @astr0x
