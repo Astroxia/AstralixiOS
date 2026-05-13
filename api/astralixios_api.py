@@ -3,6 +3,14 @@ astralixios_api.py  -  AstralixiOS TUI Application API
 =======================================================
 The official API for building TUI apps on AstralixiOS.
 
+HOW ASTRALIXI WORKS
+--------------------
+AstralixiOS is not a custom operating system or kernel. It is a TUI binary
+(the Astralixi environment) that runs on top of Raspberry Pi OS Lite. When
+the device boots, a startup script launches the Astralixi binary automatically,
+giving the user the full Astralixi experience. Your app runs inside that
+environment - it is just a Python script that uses this API.
+
 TUI stands for Terminal User Interface. It is basically an advanced CLI
 with very basic graphics - coloured text, borders, boxes, and widgets,
 all drawn inside the terminal using characters. No windows, no GUI.
