@@ -579,33 +579,33 @@ Useful if you want a specific colour combo that the default `fg`/`bg` system doe
 
 ---
 
-## Packaging Your App
+## Testing Your App
 
-Once your app is working and you're happy with it, you need to convert it into an `.axapp` bundle so it can be installed from the app library.
+Testing is simple — just run your `.py` file directly with Python. No special tools, no build step, nothing to install.
 
-Inside AstralixiOS, run:
-
-```
-axpack my_app.py
-```
-
-That packs your script into a signed bundle. Then install and test it locally:
+Make sure your folder looks like this:
 
 ```
-axinstall my_app.axapp
+my_app/
+├── astralixios_api.py   ← grab this from the AstralixiOS SDK
+└── my_app.py            ← your app
 ```
 
-After that it shows up in the app list just like any other installed app.
+Because `astralixios_api` is imported by name, Python needs to find it in the same directory as your app. As long as it's sitting right next to your `.py` file, it'll work. Then just run:
 
----
+```
+python my_app.py
+```
 
-## Submitting to the Official Library
+That's it. You'll see your app running exactly as it would on-device. Test all your key bindings, make sure the layout doesn't break at different terminal sizes (try resizing your terminal window before running — remember, `app.cols` and `app.rows` are measured at startup), and verify that the exit shortcut is clearly visible.
 
-Anyone can submit an app. Here's the process:
+When you're done, do **NOT** include `astralixios_api.py` in your submission repo — the OS provides it automatically on-device.
 
-### Step 1 — Set up your GitHub repo
+### Getting Your App onto AstralixiOS
 
-Create a public GitHub repository. It needs:
+All `.axapp` files for AstralixiOS must be verified and compiled by Astroxia before they can be distributed or installed. There is no self-packaging or sideloading — this is intentional. Allowing anyone to freely compile and distribute `.axapp` bundles would create real security risks (malicious apps bypassing review) and decentralisation problems (unofficial app sources fragmenting the ecosystem). So the compilation and signing of `.axapp` bundles is handled entirely on Astroxia's end as part of the submission review process.
+
+To get your app into the official library, open a public GitHub repository with your app. It needs:
 
 ```
 my_app/
@@ -614,15 +614,8 @@ my_app/
 └── LICENSE       ← any open source licence you like
 ```
 
-Do **NOT** include `astralixios_api.py` in your repo. The OS provides it automatically.
+Then fork the AstralixiOS App Library repo and open a pull request adding your app to the `submissions/` folder, with an entry in `submissions/index.json` for your app's name, description, and category. A maintainer will review it manually for:
 
-### Step 2 — Open a pull request
-
-Fork the AstralixiOS App Library repo and open a pull request adding your app to the `submissions/` folder. Include an entry in `submissions/index.json` with your app's name, description, and category.
-
-### Step 3 — Wait for manual review
-
-A maintainer will check your app for:
 - TUI only — no GUI, no external windows
 - Python Standard Library only — no third-party packages
 - Uses `astralixios_api` correctly
@@ -630,7 +623,7 @@ A maintainer will check your app for:
 - README actually explains the app
 - The app actually runs without errors
 
-Reviews are done manually right now, so be patient. If something needs fixing, you'll get a comment on the pull request explaining what to change. Push the fix and the review continues. Apps that pass get merged and show up in the library within 24 hours.
+If something needs fixing you'll get a comment on the PR explaining what to change. Push the fix and the review continues. Apps that pass get compiled into a verified `.axapp`, merged into the library, and show up for users within 24 hours.
 
 ---
 
@@ -691,4 +684,4 @@ Reviews are done manually right now, so be patient. If something needs fixing, y
 
 ---
 
-*AstralixiOS Developer Documentation — draft v0.1*
+*AstralixiOS Developer Documentation v14-05-2026*
