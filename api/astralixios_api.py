@@ -1,6 +1,6 @@
 """
-astralixios_api.py  -  AstralixiOS TUI Application API
-=======================================================
+astralixios_api.py  -  AstralixiOS TUI Application API  v2
+===========================================================
 The official API for building TUI apps on AstralixiOS.
 
 HOW ASTRALIXI WORKS
@@ -1251,3 +1251,411 @@ def sleep(seconds: float) -> None:
     seconds : float - how long to pause (fractions are fine, e.g. 0.05)
     """
     curses.napms(int(seconds * 1000))
+
+
+# ---------------------------------------------------------------------------
+# DRAWING - GEOMETRIC SHAPES
+# ---------------------------------------------------------------------------
+# All shape functions share a consistent signature:
+#
+#   draw_<shape>(app, cx, cy, size, ...)
+#
+# cx, cy   — centre of the shape in terminal coordinates (col, row)
+# size     — shape-specific size parameter (see each function for details)
+# fill     — True = solid filled shape, False = outline only
+# fg       — character / border colour (COLOR_* constant)
+# bg       — background colour (COLOR_* constant)
+# fill_char— character used when fill=True  (default "█")
+# border_char — character used for the outline when fill=False
+#               (default "▓" for most shapes, shape-specific for some)
+#
+# Because terminal cells are roughly twice as tall as they are wide,
+# all shape functions apply an aspect-ratio correction automatically:
+# horizontal extents are multiplied by 2 so circles look circular,
+# triangles look triangular, etc.
+# ---------------------------------------------------------------------------
+
+def _shape_attr(app, fg, bg):
+    """Return a curses attribute int for shape drawing. Internal use only."""
+    return _curses_attr(app, fg, bg, ATTR_NORMAL)
+
+
+def draw_square(app: App, cx: int, cy: int, size: int,
+                fill: bool = True,
+                fg=COLOR_WHITE, bg=COLOR_BLACK,
+                fill_char: str = "█", border_char: str = "▓") -> None:
+    """
+    Draw a square centred on (cx, cy).
+
+    Because terminal characters are taller than they are wide, the square is
+    drawn with a 2:1 column-to-row ratio so it appears visually square.
+
+    Args
+    ----
+    app         : App
+    cx          : int  - centre column
+    cy          : int  - centre row
+    size        : int  - half-height (radius) in rows. The square will be
+                         (size*2+1) rows tall and ((size*2+1)*2) columns wide.
+    fill        : bool, optional - True = solid, False = outline only. Default True.
+    fg          : int,  optional - foreground colour. Default WHITE.
+    bg          : int,  optional - background colour. Default BLACK.
+    fill_char   : str,  optional - character used to fill the shape. Default "█".
+    border_char : str,  optional - character used for the border. Default "▓".
+
+    Example
+    -------
+        # A small filled cyan square in the centre of the screen
+        draw_square(app, app.cols // 2, app.rows // 2, 4,
+                    fill=True, fg=COLOR_CYAN)
+    """
+    half_h = size
+    half_w = size * 2   # 2:1 correction for terminal aspect ratio
+    a_fill   = _shape_attr(app, fg, bg)
+    a_border = _shape_attr(app, fg, bg)
+
+    for r in range(cy - half_h, cy + half_h + 1):
+        if r < 0 or r >= app.rows:
+            continue
+        on_top    = (r == cy - half_h)
+        on_bottom = (r == cy + half_h)
+        for c in range(cx - half_w, cx + half_w + 1):
+            if c < 0 or c >= app.cols:
+                continue
+            on_left  = (c == cx - half_w)
+            on_right = (c == cx + half_w)
+            is_border = on_top or on_bottom or on_left or on_right
+            if fill:
+                ch = border_char if is_border else fill_char
+                _safe_addstr(app._win, r, c, ch, a_fill)
+            else:
+                if is_border:
+                    _safe_addstr(app._win, r, c, border_char, a_border)
+
+
+def draw_rectangle(app: App, cx: int, cy: int,
+                   half_w: int, half_h: int,
+                   fill: bool = True,
+                   fg=COLOR_WHITE, bg=COLOR_BLACK,
+                   fill_char: str = "█", border_char: str = "▓") -> None:
+    """
+    Draw a rectangle centred on (cx, cy).
+
+    Unlike draw_square, you control width and height independently.
+    No automatic aspect-ratio correction is applied here — you supply the
+    exact column-span and row-span you want.
+
+    Args
+    ----
+    app         : App
+    cx          : int  - centre column
+    cy          : int  - centre row
+    half_w      : int  - half-width in columns (total width = half_w*2+1)
+    half_h      : int  - half-height in rows   (total height = half_h*2+1)
+    fill        : bool, optional - True = solid, False = outline only. Default True.
+    fg          : int,  optional - foreground colour. Default WHITE.
+    bg          : int,  optional - background colour. Default BLACK.
+    fill_char   : str,  optional - fill character. Default "█".
+    border_char : str,  optional - border character. Default "▓".
+
+    Example
+    -------
+        # A wide, short rectangle — like a health bar frame
+        draw_rectangle(app, app.cols // 2, 5, 30, 2, fill=False, fg=COLOR_GREEN)
+    """
+    a = _shape_attr(app, fg, bg)
+    for r in range(cy - half_h, cy + half_h + 1):
+        if r < 0 or r >= app.rows:
+            continue
+        on_top    = (r == cy - half_h)
+        on_bottom = (r == cy + half_h)
+        for c in range(cx - half_w, cx + half_w + 1):
+            if c < 0 or c >= app.cols:
+                continue
+            on_left  = (c == cx - half_w)
+            on_right = (c == cx + half_w)
+            is_border = on_top or on_bottom or on_left or on_right
+            if fill:
+                ch = border_char if is_border else fill_char
+                _safe_addstr(app._win, r, c, ch, a)
+            else:
+                if is_border:
+                    _safe_addstr(app._win, r, c, border_char, a)
+
+
+def draw_circle(app: App, cx: int, cy: int, size: int,
+                fill: bool = True,
+                fg=COLOR_WHITE, bg=COLOR_BLACK,
+                fill_char: str = "█", border_char: str = "▓") -> None:
+    """
+    Draw a circle centred on (cx, cy).
+
+    Uses the midpoint circle algorithm. The horizontal radius is doubled
+    to compensate for the 2:1 terminal character aspect ratio so the result
+    looks circular rather than oval.
+
+    Args
+    ----
+    app         : App
+    cx          : int  - centre column
+    cy          : int  - centre row
+    size        : int  - radius in rows (horizontal radius will be size*2)
+    fill        : bool, optional - True = solid, False = outline only. Default True.
+    fg          : int,  optional - foreground colour. Default WHITE.
+    bg          : int,  optional - background colour. Default BLACK.
+    fill_char   : str,  optional - fill character. Default "█".
+    border_char : str,  optional - border character. Default "▓".
+
+    Example
+    -------
+        draw_circle(app, app.cols // 2, app.rows // 2, 6,
+                    fill=False, fg=COLOR_CYAN)
+    """
+    a_fill   = _shape_attr(app, fg, bg)
+    a_border = _shape_attr(app, fg, bg)
+    ry = size          # vertical radius
+    rx = size * 2      # horizontal radius (2:1 aspect-ratio correction)
+
+    # Collect border cells using the ellipse midpoint algorithm
+    border_cells = set()
+    x, y = 0, ry
+    rx2, ry2 = rx * rx, ry * ry
+    twoRx2, twoRy2 = 2 * rx2, 2 * ry2
+    px, py = 0, twoRx2 * y
+
+    def _plot4(bx, by):
+        border_cells.add((cx + bx, cy + by))
+        border_cells.add((cx - bx, cy + by))
+        border_cells.add((cx + bx, cy - by))
+        border_cells.add((cx - bx, cy - by))
+
+    # Region 1
+    p = round(ry2 - rx2 * ry + 0.25 * rx2)
+    while px < py:
+        _plot4(x, y)
+        x += 1
+        px += twoRy2
+        if p < 0:
+            p += ry2 + px
+        else:
+            y -= 1
+            py -= twoRx2
+            p += ry2 + px - py
+
+    # Region 2
+    p = round(ry2 * (x + 0.5) ** 2 + rx2 * (y - 1) ** 2 - rx2 * ry2)
+    while y >= 0:
+        _plot4(x, y)
+        y -= 1
+        py -= twoRx2
+        if p > 0:
+            p += rx2 - py
+        else:
+            x += 1
+            px += twoRy2
+            p += rx2 - py + px
+
+    if fill:
+        # For each row, fill between the leftmost and rightmost border cells
+        row_spans = {}
+        for (bc, br) in border_cells:
+            if br not in row_spans:
+                row_spans[br] = [bc, bc]
+            else:
+                if bc < row_spans[br][0]: row_spans[br][0] = bc
+                if bc > row_spans[br][1]: row_spans[br][1] = bc
+
+        for br, (left, right) in row_spans.items():
+            if br < 0 or br >= app.rows:
+                continue
+            for bc in range(left, right + 1):
+                if bc < 0 or bc >= app.cols:
+                    continue
+                is_border = (bc, br) in border_cells
+                ch = border_char if is_border else fill_char
+                _safe_addstr(app._win, br, bc, ch, a_fill)
+    else:
+        for (bc, br) in border_cells:
+            if 0 <= br < app.rows and 0 <= bc < app.cols:
+                _safe_addstr(app._win, br, bc, border_char, a_border)
+
+
+def draw_triangle(app: App, cx: int, cy: int, size: int,
+                  fill: bool = True,
+                  fg=COLOR_WHITE, bg=COLOR_BLACK,
+                  fill_char: str = "█", border_char: str = "▓") -> None:
+    """
+    Draw an upward-pointing isosceles triangle centred on (cx, cy).
+
+    The apex is at the top, the base at the bottom. The 2:1 aspect-ratio
+    correction is applied horizontally.
+
+    Args
+    ----
+    app         : App
+    cx          : int  - centre column (horizontal midpoint)
+    cy          : int  - centre row    (vertical midpoint of the triangle)
+    size        : int  - half-height in rows. The triangle will be
+                         (size*2+1) rows tall.
+    fill        : bool, optional - True = solid, False = outline only. Default True.
+    fg          : int,  optional - foreground colour. Default WHITE.
+    bg          : int,  optional - background colour. Default BLACK.
+    fill_char   : str,  optional - fill character. Default "█".
+    border_char : str,  optional - border character. Default "▓".
+
+    Example
+    -------
+        draw_triangle(app, app.cols // 2, app.rows // 2, 5,
+                      fill=True, fg=COLOR_YELLOW)
+    """
+    a = _shape_attr(app, fg, bg)
+    top_row = cy - size
+    bot_row = cy + size
+
+    for r in range(top_row, bot_row + 1):
+        if r < 0 or r >= app.rows:
+            continue
+        # How far down from the apex (0 at top, size*2 at bottom)
+        progress = r - top_row
+        # Width at this row, scaled for aspect ratio
+        half_span = round(progress * size * 2 / (size * 2)) if size else 0
+        left_c  = cx - half_span
+        right_c = cx + half_span
+        is_top = (r == top_row)
+        is_bot = (r == bot_row)
+
+        for c in range(left_c, right_c + 1):
+            if c < 0 or c >= app.cols:
+                continue
+            is_border = is_top or is_bot or (c == left_c) or (c == right_c)
+            if fill:
+                ch = border_char if is_border else fill_char
+                _safe_addstr(app._win, r, c, ch, a)
+            else:
+                if is_border:
+                    _safe_addstr(app._win, r, c, border_char, a)
+
+
+def draw_hexagon(app: App, cx: int, cy: int, size: int,
+                 fill: bool = True,
+                 fg=COLOR_WHITE, bg=COLOR_BLACK,
+                 fill_char: str = "█", border_char: str = "▓") -> None:
+    """
+    Draw a flat-top hexagon centred on (cx, cy).
+
+    Rendered row by row using a trapezoidal approximation. The 2:1 aspect-ratio
+    correction is applied horizontally so the shape looks like a proper hexagon
+    rather than a narrow diamond.
+
+    Args
+    ----
+    app         : App
+    cx          : int  - centre column
+    cy          : int  - centre row
+    size        : int  - radius in rows (top to middle). Total height = size*2+1 rows.
+    fill        : bool, optional - True = solid, False = outline only. Default True.
+    fg          : int,  optional - foreground colour. Default WHITE.
+    bg          : int,  optional - background colour. Default BLACK.
+    fill_char   : str,  optional - fill character. Default "█".
+    border_char : str,  optional - border character. Default "▓".
+
+    Example
+    -------
+        draw_hexagon(app, 40, 20, 7, fill=False, fg=COLOR_MAGENTA)
+    """
+    import math
+    a = _shape_attr(app, fg, bg)
+
+    # Flat-top hex: row at distance d from centre has half-width proportional to:
+    #   half_w = size * (1 - 0.5 * |d| / size) * 2   (2:1 aspect correction)
+    # This gives the classic two-triangle + rectangle hex silhouette.
+    for r in range(cy - size, cy + size + 1):
+        if r < 0 or r >= app.rows:
+            continue
+        d = abs(r - cy)
+        # In the outer third, width tapers; in the inner two thirds, it's constant
+        taper_zone = size // 2 if size > 1 else 0
+        if d > (size - taper_zone):
+            ratio = 1.0 - (d - (size - taper_zone)) / max(1, taper_zone)
+        else:
+            ratio = 1.0
+        half_w = round(size * ratio * 2)
+        left_c  = cx - half_w
+        right_c = cx + half_w
+        is_top = (r == cy - size)
+        is_bot = (r == cy + size)
+
+        for c in range(left_c, right_c + 1):
+            if c < 0 or c >= app.cols:
+                continue
+            is_border = is_top or is_bot or (c == left_c) or (c == right_c)
+            if fill:
+                ch = border_char if is_border else fill_char
+                _safe_addstr(app._win, r, c, ch, a)
+            else:
+                if is_border:
+                    _safe_addstr(app._win, r, c, border_char, a)
+
+
+def draw_octagon(app: App, cx: int, cy: int, size: int,
+                 fill: bool = True,
+                 fg=COLOR_WHITE, bg=COLOR_BLACK,
+                 fill_char: str = "█", border_char: str = "▓") -> None:
+    """
+    Draw a regular octagon centred on (cx, cy).
+
+    Rendered row by row. Each row clips the corners at 45 degrees to produce
+    the octagonal silhouette. The 2:1 aspect-ratio correction is applied
+    horizontally.
+
+    Args
+    ----
+    app         : App
+    cx          : int  - centre column
+    cy          : int  - centre row
+    size        : int  - half-height in rows. Total height = size*2+1 rows.
+    fill        : bool, optional - True = solid, False = outline only. Default True.
+    fg          : int,  optional - foreground colour. Default WHITE.
+    bg          : int,  optional - background colour. Default BLACK.
+    fill_char   : str,  optional - fill character. Default "█".
+    border_char : str,  optional - border character. Default "▓".
+
+    Example
+    -------
+        draw_octagon(app, app.cols // 2, app.rows // 2, 8,
+                     fill=True, fg=COLOR_RED, bg=COLOR_BLACK)
+    """
+    a = _shape_attr(app, fg, bg)
+    # The corner cut starts when |dy| > (size - cut)
+    # For a regular octagon: cut ≈ size * (1 - 1/√2). We use size//3 as a
+    # practical approximation that reads clearly in a character grid.
+    cut = max(1, size // 3)
+
+    for r in range(cy - size, cy + size + 1):
+        if r < 0 or r >= app.rows:
+            continue
+        dy = abs(r - cy)
+        # Maximum horizontal half-width (2:1 aspect correction)
+        max_half_w = size * 2
+        # Clip the corners: when in the corner zone, reduce width linearly
+        if dy > (size - cut):
+            corner_progress = dy - (size - cut)   # 0 at boundary, cut at tip
+            half_w = round(max_half_w * (1.0 - corner_progress / cut))
+        else:
+            half_w = max_half_w
+
+        left_c  = cx - half_w
+        right_c = cx + half_w
+        is_top = (r == cy - size)
+        is_bot = (r == cy + size)
+
+        for c in range(left_c, right_c + 1):
+            if c < 0 or c >= app.cols:
+                continue
+            is_border = is_top or is_bot or (c == left_c) or (c == right_c)
+            if fill:
+                ch = border_char if is_border else fill_char
+                _safe_addstr(app._win, r, c, ch, a)
+            else:
+                if is_border:
+                    _safe_addstr(app._win, r, c, border_char, a)

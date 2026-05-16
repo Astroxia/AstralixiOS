@@ -19,12 +19,11 @@ TUI stands for **Terminal User Interface**. Basically, imagine a program that ru
 You've probably seen apps like this before. `htop`, `nano`, `vim` — those are TUI apps. That's the kind of thing you're building.
 
 Some ideas of what you could make:
-- A space news reader (fits perfectly with the Astralixi vibe)
-- A star chart viewer
 - A to-do list app
 - A calculator
 - A simple text editor
 - A game like Snake or Tetris
+- Space-related app
 - Pretty much anything that works in a terminal
 
 ---
@@ -627,7 +626,129 @@ If something needs fixing you'll get a comment on the PR explaining what to chan
 
 ---
 
-## Tips That Will Save You Pain
+## Drawing Shapes
+
+API v2 adds six shape-drawing functions. They all follow the same idea: you give a **centre point** `(cx, cy)`, a **size**, and choose whether you want the shape **filled or just an outline**. You can also control the foreground colour, background colour, and the characters used for the fill and border.
+
+### How centre coords work
+
+Every shape is centred on the `(cx, cy)` you provide, measured in actual terminal columns and rows. For example, to draw a shape in the middle of the screen:
+
+```python
+draw_circle(app, app.cols // 2, app.rows // 2, 6)
+```
+
+### Aspect-ratio correction
+
+Terminal character cells are roughly twice as tall as they are wide. Every shape function automatically compensates for this by stretching horizontally, so a "circle" looks circular and a "square" looks square — not squashed. You don't need to do anything special; it's handled internally.
+
+### Fill vs outline
+
+Every shape accepts a `fill` parameter:
+
+```python
+# Solid filled circle
+draw_circle(app, 40, 15, 5, fill=True, fg=COLOR_CYAN)
+
+# Just the outline
+draw_circle(app, 40, 15, 5, fill=False, fg=COLOR_CYAN)
+```
+
+You can also customise the characters used:
+
+```python
+# Fill with dots, border with a solid block
+draw_square(app, 20, 10, 4, fill=True,
+            fill_char="·", border_char="█", fg=COLOR_GREEN)
+```
+
+The defaults are `fill_char="█"` (solid block) and `border_char="▓"` (medium shade), which gives a nice visual distinction between the interior and the edge.
+
+### The six shapes
+
+**Square** — equal width and height, centred on the point. `size` is the half-height in rows; the width is automatically doubled to account for aspect ratio.
+
+```python
+draw_square(app, cx, cy, size, fill=True, fg=COLOR_WHITE, bg=COLOR_BLACK,
+            fill_char="█", border_char="▓")
+```
+
+**Rectangle** — you control width and height independently. No automatic aspect-ratio correction here — you supply the exact column-span and row-span.
+
+```python
+draw_rectangle(app, cx, cy, half_w, half_h, fill=True, fg=COLOR_WHITE, bg=COLOR_BLACK,
+               fill_char="█", border_char="▓")
+```
+
+**Circle** — `size` is the radius in rows. The horizontal radius is doubled internally for correct proportions.
+
+```python
+draw_circle(app, cx, cy, size, fill=True, fg=COLOR_WHITE, bg=COLOR_BLACK,
+            fill_char="█", border_char="▓")
+```
+
+**Triangle** — upward-pointing isosceles triangle. `size` is the half-height; the base is at the bottom.
+
+```python
+draw_triangle(app, cx, cy, size, fill=True, fg=COLOR_WHITE, bg=COLOR_BLACK,
+              fill_char="█", border_char="▓")
+```
+
+**Hexagon** — flat-top hexagon. `size` is the half-height in rows.
+
+```python
+draw_hexagon(app, cx, cy, size, fill=True, fg=COLOR_WHITE, bg=COLOR_BLACK,
+             fill_char="█", border_char="▓")
+```
+
+**Octagon** — regular octagon with clipped corners. `size` is the half-height in rows.
+
+```python
+draw_octagon(app, cx, cy, size, fill=True, fg=COLOR_WHITE, bg=COLOR_BLACK,
+             fill_char="█", border_char="▓")
+```
+
+### Full example — shape showcase
+
+```python
+from astralixios_api import (App, draw_box, draw_status_bar, run,
+                              draw_square, draw_circle, draw_triangle,
+                              draw_rectangle, draw_hexagon, draw_octagon,
+                              COLOR_CYAN, COLOR_YELLOW, COLOR_RED,
+                              COLOR_GREEN, COLOR_MAGENTA, COLOR_WHITE,
+                              COLOR_BLACK)
+
+def draw(app):
+    draw_box(app, 0, 0, app.cols, app.rows, title="Shape Demo", double_border=True)
+
+    row_y = app.rows // 2
+
+    # Evenly spread six shapes across the screen
+    positions = [
+        app.cols * 1 // 7,
+        app.cols * 2 // 7,
+        app.cols * 3 // 7,
+        app.cols * 4 // 7,
+        app.cols * 5 // 7,
+        app.cols * 6 // 7,
+    ]
+
+    draw_square   (app, positions[0], row_y, 4, fill=True,  fg=COLOR_CYAN)
+    draw_rectangle(app, positions[1], row_y, 12, 3, fill=False, fg=COLOR_YELLOW)
+    draw_circle   (app, positions[2], row_y, 4, fill=True,  fg=COLOR_RED)
+    draw_triangle (app, positions[3], row_y, 4, fill=False, fg=COLOR_GREEN)
+    draw_hexagon  (app, positions[4], row_y, 4, fill=True,  fg=COLOR_MAGENTA)
+    draw_octagon  (app, positions[5], row_y, 4, fill=False, fg=COLOR_WHITE)
+
+    draw_status_bar(app, " Q to quit")
+
+app = App(title="Shape Demo")
+run(app, draw)
+```
+
+---
+
+
 
 **Keyboard navigation is everything.** Your app must be completely usable without a mouse (there isn't one anyway). Arrow keys to move, Tab to cycle between focusable things, Enter to confirm, Escape to cancel or go back. If something is only reachable with a click, it's not accessible at all.
 
@@ -673,6 +794,12 @@ If something needs fixing you'll get a comment on the PR explaining what to chan
 | `draw_table(...)` | Data table with column headers |
 | `draw_modal(...)` | Centred popup dialog |
 | `draw_spinner(...)` | Animated single-character spinner |
+| `draw_square(...)` | Filled or outlined square centred on a point |
+| `draw_rectangle(...)` | Filled or outlined rectangle centred on a point |
+| `draw_circle(...)` | Filled or outlined circle centred on a point |
+| `draw_triangle(...)` | Filled or outlined upward triangle centred on a point |
+| `draw_hexagon(...)` | Filled or outlined flat-top hexagon centred on a point |
+| `draw_octagon(...)` | Filled or outlined octagon centred on a point |
 | `key_name(key)` | Convert raw key code to readable name |
 | `is_printable(key)` | True if the key is a typeable character |
 | `set_color_pair(id, fg, bg)` | Define a custom colour pair |
@@ -684,4 +811,4 @@ If something needs fixing you'll get a comment on the PR explaining what to chan
 
 ---
 
-*AstralixiOS Developer Documentation v14-05-2026*
+*AstralixiOS Developer Documentation v16-05-2026  —  API v2*
